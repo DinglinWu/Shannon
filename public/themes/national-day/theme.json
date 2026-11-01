@@ -1,0 +1,51 @@
+{
+  "spec": 1,
+  "id": "national-day",
+  "name": "国庆",
+  "author": "闪念",
+  "when": {
+    "from": "10-01",
+    "to": "10-07"
+  },
+  "priority": 10,
+  "tokens": {
+    "--accent": "#d7261e",
+    "--bg": "#fffaf5",
+    "--bg-grouped": "#fbf0e8",
+    "--surface": "#fffdfb",
+    "--fill": "rgba(180, 70, 40, 0.09)",
+    "--fill-2": "rgba(180, 70, 40, 0.16)",
+    "--separator": "rgba(160, 60, 40, 0.12)"
+  },
+  "slots": {
+    "placeholder": "国庆快乐",
+    "badge": {
+      "image": "lantern.svg",
+      "height": 30,
+      "label": "国庆快乐"
+    },
+    "pattern": {
+      "image": "pattern.svg",
+      "opacity": 0.06,
+      "size": 120
+    }
+  },
+  "enter": {
+    "effect": "fireworks",
+    "scope": "screen",
+    "frequency": "daily",
+    "duration": 3400,
+    "message": "闪念祝福祖国繁荣昌盛",
+    "params": {
+      "colors": [
+        "#ffd23f",
+        "#ff4b3e",
+        "#ffb347",
+        "#fff4d6",
+        "#ff7a59"
+      ],
+      "bursts": 7,
+      "particles": 80
+    }
+  }
+}

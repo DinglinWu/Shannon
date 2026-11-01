@@ -1,0 +1,151 @@
+[
+  {
+    "id": "cedar",
+    "label": "松青",
+    "keywords": [
+      "短发",
+      "沉稳",
+      "可靠",
+      "理性"
+    ]
+  },
+  {
+    "id": "apricot",
+    "label": "暖杏",
+    "keywords": [
+      "齐肩",
+      "温柔",
+      "耐心",
+      "细腻"
+    ]
+  },
+  {
+    "id": "curls",
+    "label": "琥珀",
+    "keywords": [
+      "卷发",
+      "活泼",
+      "开朗",
+      "热情"
+    ]
+  },
+  {
+    "id": "silver",
+    "label": "月白",
+    "keywords": [
+      "银发",
+      "白发",
+      "冷静",
+      "克制"
+    ]
+  },
+  {
+    "id": "glasses",
+    "label": "书墨",
+    "keywords": [
+      "眼镜",
+      "学者",
+      "研究",
+      "读书"
+    ]
+  },
+  {
+    "id": "bun",
+    "label": "花栀",
+    "keywords": [
+      "丸子头",
+      "发髻",
+      "细心"
+    ]
+  },
+  {
+    "id": "longhair",
+    "label": "暮蓝",
+    "keywords": [
+      "长发",
+      "安静",
+      "内敛"
+    ]
+  },
+  {
+    "id": "beanie",
+    "label": "雾松",
+    "keywords": [
+      "帽子",
+      "自由",
+      "随性"
+    ]
+  },
+  {
+    "id": "orange-cat",
+    "label": "橘子",
+    "keywords": [
+      "猫",
+      "慵懒",
+      "可爱"
+    ]
+  },
+  {
+    "id": "white-cat",
+    "label": "团雪",
+    "keywords": [
+      "白猫",
+      "柔软",
+      "腼腆"
+    ]
+  },
+  {
+    "id": "shiba",
+    "label": "麦麦",
+    "keywords": [
+      "狗",
+      "阳光",
+      "忠诚"
+    ]
+  },
+  {
+    "id": "fox",
+    "label": "赤狐",
+    "keywords": [
+      "狐狸",
+      "机敏",
+      "俏皮"
+    ]
+  },
+  {
+    "id": "mountain",
+    "label": "山岚",
+    "keywords": [
+      "山",
+      "自然",
+      "坚定"
+    ]
+  },
+  {
+    "id": "sea",
+    "label": "听海",
+    "keywords": [
+      "海",
+      "平静",
+      "浪漫"
+    ]
+  },
+  {
+    "id": "flower",
+    "label": "花信",
+    "keywords": [
+      "花",
+      "园艺",
+      "治愈"
+    ]
+  },
+  {
+    "id": "moon",
+    "label": "晚星",
+    "keywords": [
+      "星",
+      "夜",
+      "神秘"
+    ]
+  }
+]

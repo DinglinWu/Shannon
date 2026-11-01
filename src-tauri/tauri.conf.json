@@ -1,0 +1,77 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Shannon",
+  "version": "3.0.1",
+  "identifier": "com.brynn.ailauncher",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build",
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "闪念",
+        "width": 664,
+        "height": 126,
+        "resizable": true,
+        "decorations": false,
+        "transparent": true,
+        "shadow": false,
+        "alwaysOnTop": false,
+        "center": true,
+        "skipTaskbar": true,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "resources": {
+      "component-catalog.json": "components/catalog.json"
+    },
+    "active": true,
+    "targets": [
+      "nsis"
+    ],
+    "publisher": "Dinglin",
+    "copyright": "Copyright © 2026 Dinglin",
+    "shortDescription": "闪念 —— 从此刻开始的桌面 AI 工具箱",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "languages": [
+          "SimpChinese",
+          "English"
+        ],
+        "displayLanguageSelector": true,
+        "installerIcon": "icons/icon.ico"
+      }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFFMEQwOTZBRDVGRDBFRTUKUldUbER2M1ZhZ2tOcmhndW5ZajNwM2p2L0ozVW1ZUmx0bExHaVNIcHhncnNQSEtRRVEwSVFid00K",
+      "endpoints": [
+        "https://gitee.com/wu-dinglin/shannon/raw/master/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
+  }
+}

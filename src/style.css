@@ -1,0 +1,1659 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* 窗口是透明的，四周留 --pad 宽的透明边，搜索框画在中间。
+   这圈边是给打开模式的荧光往外发的，也用来放自己画的阴影
+   （透明窗口没法用系统阴影，系统会沿整个窗口矩形画一个方框）。
+   改这个值要同步改 main.js 里的 PAD 和 tauri.conf.json 的初始窗口尺寸 */
+:root {
+  --pad: 12px;
+  /* 上边多留一点，放移动手柄 */
+  --pad-top: 24px;
+
+  /* ---------- 设计 token ----------
+     全部样式只从这里取值，不再各处手写。参照苹果的人机界面规范：
+     一个强调色 + 几档透明度的灰来分层级，而不是一堆各不相同的灰 */
+
+  /* 颜色 */
+  --accent: #007aff;                 /* 系统蓝，唯一的强调色 */
+  --accent-rgb: 0, 122, 255;
+  --label: #1d1d1f;                  /* 主要文字 */
+  --label-2: rgba(60, 60, 67, 0.62); /* 次要文字：说明、未选中项 */
+  --label-3: rgba(60, 60, 67, 0.34); /* 第三级：占位符、弱图标 */
+  --fill: rgba(120, 120, 128, 0.12); /* 控件底色：输入框、代码、悬停 */
+  --fill-2: rgba(120, 120, 128, 0.2);/* 按下 / 更强的悬停 */
+  --separator: rgba(60, 60, 67, 0.1);/* 分隔线，只在确实需要分区时用 */
+  --bg: #f6f6f8;                     /* 窗口底色 */
+  --bg-grouped: #efeff3;             /* 分组背景：侧栏、设置面板 */
+  --surface: #fff;                   /* 浮起来的面：气泡、回答卡片、复制按钮、手柄 */
+  --red: #ff3b30;
+  --green: #34c759;
+
+  /* 圆角：窗口最大，往里一层小一档，保持同心 */
+  --r-window: 12px;
+  --r-md: 8px;   /* 代码块、面板内的块 */
+  --r-sm: 6px;   /* 按钮、输入框、列表项 */
+  --r-xs: 4px;   /* 行内代码 */
+  --r-bubble: 16px;
+
+  /* 动画：三种曲线、三档时长，所有过渡都从这里选 */
+  --ease: cubic-bezier(0.25, 1, 0.5, 1);          /* 标准：快起慢停，大部分移动 */
+  --ease-spring: cubic-bezier(0.34, 1.3, 0.64, 1); /* 弹出：一点点回弹，东西"冒出来" */
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);        /* 离场 / 下落：加速走掉 */
+  --t-fast: 0.15s;
+  --t: 0.22s;
+  --t-slow: 0.32s;
+}
+
+/* 字体：苹果系统上直接用 SF / 苹方；Windows 上 SF 用不了，
+   选观感最接近的 Win11 自带 Segoe UI Variable 和微软雅黑 UI（比雅黑字距紧一点） */
+html, body {
+  background: transparent;
+  color: var(--label);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC",
+    "Segoe UI Variable Text", "Segoe UI", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /* 不开 text-rendering: optimizeLegibility：它让每次排版都做字距和连字计算，
+     窗口变形时文字多了会明显拖慢 */
+}
+
+body {
+  padding: var(--pad-top) var(--pad) var(--pad);
+}
+
+/* 初次加载及隐藏后预置透明，避免系统窗口先显示完整界面、再开始淡入。 */
+html.window-hidden body {
+  opacity: 0;
+  pointer-events: none;
+}
+html.window-hiding body {
+  pointer-events: none;
+}
+
+/* 整体是横向两栏：左边会话列表（折叠态隐藏），右边主列。
+   这样输入框待在主列里，不会横跨到会话栏底下去 */
+#app {
+  width: calc(100vw - 2 * var(--pad));
+  display: flex;
+  flex-direction: row;
+  background: var(--bg);
+  /* 以前靠 Win11 给窗口切圆角，透明窗口没有了，自己切 */
+  border-radius: var(--r-window);
+  overflow: hidden;
+  /* 苹果的窗口阴影：一圈极细的轮廓 + 一层散开的软影。
+     只留两层：窗口每变一帧阴影都要重画，层数和模糊半径直接就是开销 */
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 3px 10px rgba(0, 0, 0, 0.12);
+  transition: box-shadow var(--t-slow) var(--ease);
+  /* 盖在 #o-border 上面，把荧光往里的那一半挡住 */
+  position: relative;
+  z-index: 1;
+  /* 让里面所有 position:fixed 的东西（设置气泡、移动手柄、缩放手柄、红框、涟漪）
+     以 #app 为参照，而不是整个窗口。这样它们原来写的 top/left/inset 全部不用改，
+     也跟以前一样被搜索框的边缘裁掉 */
+  contain: layout;
+}
+
+/* 展开 / 收起期间 #app 自己用 CSS 过渡变大变小（见 main.js 的 animateSize），
+   系统窗口只在开头或结尾动一次 */
+#app.morph-anim {
+  transition: width var(--t) var(--ease), height var(--t) var(--ease),
+    box-shadow var(--t-slow) var(--ease);
+}
+
+/* 节日开场先展示寄语，随后只过渡颜色；尺寸动画仍由原有逻辑控制。 */
+html.theme-changing #app:not(.morph-anim):not(.collapsing) {
+  transition: background-color 540ms ease, box-shadow 540ms ease;
+}
+html.theme-changing #session-list {
+  transition: background-color 540ms ease, margin-left var(--t) var(--ease), opacity var(--t-fast) ease;
+}
+html.theme-changing #app:not(.collapsing) #dock {
+  transition: background-color 540ms ease, box-shadow 540ms ease, transform var(--t) var(--ease);
+}
+
+/* 挂历式翻页：正反两面共用一个下沿转轴，整块纸面连续向前翻 180°。 */
+#app.collapsing {
+  pointer-events: none;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  transition: none;
+}
+
+#app.collapsing #main-col {
+  position: relative;
+  justify-content: flex-start;
+  padding-top: var(--collapse-dock-height);
+}
+
+#app.collapsing #dock {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2;
+  transform-origin: left top;
+  border-radius: var(--r-window);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 3px 10px rgba(0, 0, 0, 0.12);
+  will-change: transform;
+}
+
+.calendar-front {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--bg);
+  border-radius: var(--r-window);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 2px 6px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--label);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  contain: layout paint;
+  will-change: transform;
+}
+
+.calendar-front *, .calendar-back * {
+  animation: none !important;
+  transition: none !important;
+}
+
+.calendar-leaf {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transform-origin: center bottom;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.calendar-back {
+  position: absolute;
+  inset: 0;
+  transform: rotateX(180deg);
+  backface-visibility: hidden;
+  will-change: transform;
+}
+
+/* Hold the settled surface through WebView's native resize. Avoid restarting
+   the window shadow transition or demoting text layers during the handoff. */
+#app.collapse-settling,
+#app.collapse-settling #dock,
+#app.collapse-settling #result {
+  transition: none;
+}
+
+.calendar-shade {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  border-radius: var(--r-window);
+  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.8));
+  transform: translateZ(0.5px);
+  backface-visibility: hidden;
+  pointer-events: none;
+  opacity: 0;
+}
+
+#app.collapsing #result {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: var(--bg);
+  border-radius: 0 0 var(--r-window) var(--r-window);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 3px 10px rgba(0, 0, 0, 0.12);
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #app.collapsing.morph-anim,
+  #app.collapsing #session-list,
+  #app.collapsing #settings-btn {
+    transition-duration: 0s;
+  }
+}
+
+/* 打开模式下把阴影收掉，免得灰色压在荧光上发脏 */
+#app.o-mode {
+  box-shadow: 0 0 0 0.5px rgba(var(--accent-rgb), 0.35);
+}
+
+#main-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#app.is-expanded {
+  height: calc(100vh - var(--pad-top) - var(--pad));
+}
+
+/* 展开时输入框沉到主列底部：用 flex order 调顺序，不动 DOM 结构 */
+#app.is-expanded #chat-view { order: 1; }
+
+/* 靠底对齐：平时对话区 flex:1 正好铺满，这条不起作用。
+   收起到最后窗口比"对话区最小高度（上下内边距）+ 输入栏"还矮时，
+   溢出的部分从顶部出去，被窗口上沿裁掉；输入栏始终完整贴在底部，
+   不会被挤出去只露半截 */
+#app.is-expanded #main-col {
+  justify-content: flex-end;
+}
+#app.is-expanded #dock { order: 2; }
+
+/* 输入栏和设置面板的外壳。折叠态下它就是个普通的纵向容器，什么都不改变。
+   展开态下设置面板改成挂在它下沿外面（absolute, top:100%），被窗口底边裁掉；
+   打开设置时整块往上推一个面板的高度——纯 transform，不触发布局，
+   对话区也不用逐帧变矮。透明窗口里每次重排都要重绘整个窗口，
+   以前用 max-height 做这个动画就是卡在这里 */
+#dock {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+#app.is-expanded #dock {
+  /* 推上去以后会盖住对话区底部，得有底色。
+     跟对话区的分界不画线，用一层往上投的软阴影，让输入栏像浮在上面 */
+  /* 跟窗口同色：收起时它就是折叠态的搜索栏，颜色不能在最后一下跳变。
+     跟对话区的分界靠下面那层往上投的阴影 */
+  background: var(--bg);
+  border-radius: var(--r-window) var(--r-window) 0 0;
+  box-shadow: 0 -1px 0 rgba(0, 0, 0, 0.04), 0 -4px 10px -4px rgba(0, 0, 0, 0.08);
+  transition: transform var(--t) var(--ease);
+  will-change: transform;
+}
+
+#app.is-expanded #settings-panel,
+#app.is-expanded #settings-panel.collapsed,
+#app.is-expanded #settings-panel.closing {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: none;
+  padding-top: 38px;
+  background: var(--bg-grouped);
+  transition: none;
+}
+
+/* 沉底后输入栏上沿的圆角跟窗口一致；分界靠 #dock 的阴影，不再画线 */
+#app.is-expanded #top-row {
+  border-radius: var(--r-window) var(--r-window) 0 0;
+}
+
+/* 用户手动拖过尺寸之后，内容撑满窗口，不再按内容反推窗口高度 */
+#app.is-sized {
+  height: calc(100vh - var(--pad-top) - var(--pad));
+}
+
+#app.is-sized #result {
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+}
+
+/* 顶部中间的移动手柄：上圆下尖的水滴，放在搜索框上方那条透明边里。
+   平时藏在搜索框后面，鼠标靠近顶部时从搜索框上沿往上冒出来。
+   z-index 0 + DOM 里排在 #app 前面：它在搜索框（z-index 1）底下，
+   起始位置往下挪进搜索框范围，就被搜索框挡住了，升上来的过程像是从边缘里长出来 */
+#move-grip {
+  position: fixed;
+  top: 1px; /* 高 23，尖端正好落在 24px 处的搜索框上沿 */
+  left: 50%;
+  width: 26px;
+  height: 23px;
+  color: var(--label-2);
+  cursor: move;
+  opacity: 0;
+  pointer-events: none;
+  /* 形状是 svg 画的，阴影用 drop-shadow 才能贴着水滴轮廓，box-shadow 只会是方框 */
+  filter: drop-shadow(0 1px 2.5px rgba(0, 0, 0, 0.2));
+  /* 以尖端为原点：从下往上"长"出来，而不是整块平移 */
+  transform-origin: 50% 100%;
+  transform: translateX(-50%) translateY(16px) scale(0.6);
+  transition: opacity var(--t-fast) ease, transform var(--t) var(--ease-spring),
+    filter var(--t-fast) ease, color var(--t-fast) ease;
+  z-index: 0;
+}
+
+/* 搜索框上方整条透明边都是拖动区。垫在水滴下面（DOM 里在水滴前面、同为 z-index 0），
+   左右各伸到窗口边缘，比只抓水滴宽得多 */
+#drag-strip {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--pad-top);
+  cursor: move;
+  z-index: 0;
+}
+
+#move-grip.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0) scale(1);
+}
+
+#move-grip:hover {
+  color: var(--label);
+  filter: drop-shadow(0 2px 3.5px rgba(0, 0, 0, 0.26));
+}
+
+#move-grip .drop {
+  fill: var(--surface);
+  stroke: rgba(0, 0, 0, 0.07);
+  stroke-width: 0.8;
+}
+
+#move-grip .cross {
+  fill: currentColor;
+}
+
+/* 让 mousedown 落在带 data-tauri-drag-region 的父元素上，而不是 svg 上 */
+#move-grip svg {
+  pointer-events: none;
+  display: block;
+}
+
+/* 设置入口跟移动手柄同一套逻辑，只是贴左边缘、竖直居中。
+   放左边是为了跟右下角的缩放手柄、顶栏右侧的下沉按钮错开 */
+#settings-btn {
+  position: fixed;
+  /* 和停靠点的 left 保持一致，这样下落是纯垂直的，不会斜着飘过去 */
+  left: 14px;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  /* 关键：左对齐 + 6.5px 内边距，在 30px 圆里刚好视觉居中（6.5+17+6.5=30）。
+     变成标题条时这个内边距不变，图标位置零位移，宽度只往右长 */
+  justify-content: flex-start;
+  padding-left: 6.5px;
+  border: none;
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--label-2);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.12), 0 2px 6px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-8px, -50%) scale(0.86);
+  transition: opacity var(--t-fast) ease, transform var(--t) var(--ease-spring),
+    box-shadow var(--t-fast) ease, color var(--t-fast) ease;
+  z-index: 101;
+}
+
+#settings-btn.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(0, -50%) scale(1);
+}
+
+#settings-btn:hover {
+  color: var(--label);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.14), 0 3px 9px rgba(0, 0, 0, 0.16);
+}
+
+#settings-btn svg {
+  pointer-events: none;
+  display: block;
+  flex-shrink: 0;
+}
+
+/* 停靠后的基态。位置靠 left/top，transform 空出来专门做形变 */
+#settings-btn.docked {
+  transform: scale(1);
+  transition: left var(--t-fast) var(--ease-in), top var(--t-fast) var(--ease-in),
+    transform var(--t-fast) var(--ease), width var(--t) var(--ease), height var(--t) var(--ease),
+    border-radius var(--t) var(--ease), background var(--t) ease,
+    box-shadow var(--t) ease, color var(--t) ease;
+}
+
+/* 下落靠 .docked 上那条 ease-in 的 top 过渡：水滴受重力是加速的，
+   用 ease-out 会像被人轻轻放下去，完全没有"滴落"的感觉。
+   形状全程保持圆形，不做拉伸 */
+
+/* 摊平成标题条。纯 ease-out，不做过冲回弹 */
+#settings-btn.titled,
+#settings-btn.titled:hover {
+  width: 62px;
+  height: 26px;
+  border-radius: var(--r-sm);
+  background: transparent;
+  box-shadow: none;
+  color: var(--label);
+  gap: 7px;
+  transform: scale(1);
+  transition: transform var(--t-fast) var(--ease), width var(--t-fast) var(--ease),
+    height var(--t-fast) var(--ease), border-radius var(--t-fast) var(--ease),
+    background var(--t-fast) ease, box-shadow var(--t-fast) ease,
+    color var(--t-fast) ease, left var(--t-fast) var(--ease), top var(--t-fast) var(--ease);
+}
+
+
+/* 关闭第一步：收成圆气泡，同时沿垂直方向升回搜索栏那一行。
+   top 走的是 JS 算出来的像素值，不用百分比——关闭期间窗口正在变矮，
+   top:50% 是个移动的目标，过渡会抖 */
+#settings-btn.returning {
+  transform: translate(0, 0) scale(1);
+  /* 宽度先收、上升略晚 70ms 起步，这样"收成气泡"这一下看得清，
+     不会和上升糊在一起。白底和投影同步长回来，是变回气泡最强的提示 */
+  transition: width var(--t) var(--ease), border-radius var(--t) var(--ease),
+    background var(--t) ease, box-shadow var(--t) ease, height var(--t) var(--ease),
+    color var(--t) ease, transform var(--t) var(--ease),
+    top var(--t) var(--ease) 70ms;
+}
+
+/* 关闭第二步：从窗口左边缘滑出去。ease-in 的位移，像被边框吸进去。
+   写在 .returning 之后，同权重靠源码顺序赢 */
+#settings-btn.exit-left {
+  opacity: 0;
+  transform: translate(-40px, 0) scale(0.86);
+  transition: opacity var(--t) ease, transform var(--t-slow) var(--ease-in);
+}
+
+/* 展开态不做飞入飞出：位置由 JS 逐帧贴着面板走，
+   留过渡反而会让标题追在面板后面。只保留淡入淡出 */
+#settings-btn.no-fly {
+  transition: opacity var(--t-fast) ease;
+}
+
+/* ---------- 展开态的设置按钮 ----------
+   不再贴边隐藏，常驻左下角。点开时它往左退出窗口，面板随之从底部升起，
+   像是它退出去时把设置项拉了上来；关上时面板先落下，它再从左边滑回来。
+   选择器带 #app.is-expanded，权重高过折叠态那一套（.visible/.docked 等），
+   两套互不干扰 */
+#app.is-expanded #settings-btn {
+  left: 14px;
+  top: auto;
+  bottom: 14px;
+  width: 30px;
+  height: 30px;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+  /* 回来：减速停住 */
+  transition: opacity var(--t) ease, transform var(--t-slow) var(--ease),
+    box-shadow var(--t-fast) ease, color var(--t-fast) ease;
+}
+
+#app.is-expanded #settings-btn.corner-out {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-48px);
+  /* 退出：加速往左拽，像把什么东西拉走 */
+  transition: opacity var(--t-fast) ease 0.06s, transform var(--t) var(--ease-in),
+    box-shadow var(--t-fast) ease, color var(--t-fast) ease;
+}
+
+#settings-label {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  transition: max-width var(--t) var(--ease), opacity var(--t) ease;
+}
+
+#settings-btn.titled #settings-label {
+  max-width: 60px;
+  opacity: 1;
+}
+
+/* 缩放手柄画成两段跟窗口圆角同心的弧。
+   热区 22x22 贴住右下角，窗口那个 12px 圆角的圆心正好落在本地坐标 (10,10)，
+   所以半径 9.6 和 6 的弧就是圆角向内的等距缩小版，怎么看都贴合（见 index.html） */
+#resize-grip {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  width: 22px;
+  height: 22px;
+  cursor: nwse-resize;
+  color: var(--label-3);
+  transition: color var(--t-fast) ease;
+  z-index: 100;
+}
+
+#resize-grip:hover {
+  color: var(--label-2);
+}
+
+#resize-grip svg {
+  display: block;
+  pointer-events: none;
+}
+
+/* 固定在最前面时贴着窗口边缘描一圈 1px 红框。
+   用 position:fixed 的伪元素而不是 border 或 inset shadow：
+   border 会改变 scrollHeight（折叠态按内容算窗口高度会算少），
+   而 fixed + inset:0 正好贴合视口，圆角也能跟 Win11 的窗口圆角对上 */
+#app.pinned::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  border: 1px solid var(--red);
+  border-radius: var(--r-window);
+  pointer-events: none;
+  z-index: 99;
+}
+
+/* 顶栏本身是拖拽区：输入框和按钮之外的边距都能拖动窗口 */
+#top-row {
+  position: relative; /* 给 #input-mirror 做定位参照 */
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 4px 6px 4px 10px;
+  cursor: default;
+}
+
+#query-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--label);
+  font-size: 18px;
+  /* textarea 不继承 body 字体，不写这行会变成等宽字体 */
+  font-family: inherit;
+  /* 大字号收一点字距，这是苹果大标题的做法；中文字形方正，收得很轻 */
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+  padding: 10px 6px;
+  resize: none;
+  /* 默认不给滚动条，autoGrowInput() 只在顶到 max-height 时才打开 */
+  overflow-y: hidden;
+  max-height: 132px;
+}
+
+/* 输入构成命令时整行染成强调色。textarea 做不到给单个字符上色，
+   所以叠一层同字体、同内边距的镜像 div 在它下面显示文字，textarea 自己的字变透明，
+   光标和选区照旧由 textarea 负责。只在命令态启用，普通输入完全不受影响 */
+#input-mirror {
+  position: absolute;
+  pointer-events: none;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  color: var(--label);
+}
+
+/* 命令用强调色，只留一层很淡的同色光晕，克制一点 */
+#input-mirror .cmd-text {
+  color: var(--accent);
+  text-shadow: 0 0 6px rgba(var(--accent-rgb), 0.25);
+}
+
+#query-input.cmd {
+  color: transparent;
+  caret-color: var(--label);
+  position: relative; /* 压在镜像上面，点击和选区都落在 textarea 上 */
+}
+#input-mirror .query-plain { color: var(--label); }
+/* Painted chip: no padding, border width or font-weight changes here.
+   The mirrored text must keep exactly the textarea's character advances. */
+#input-mirror .mention-text {
+  position: relative;
+  isolation: isolate;
+  color: var(--accent);
+}
+#input-mirror .mention-text::before {
+  content: "";
+  position: absolute;
+  inset: -3px -6px;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 8px;
+  background: rgba(var(--accent-rgb),.095);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb),.1);
+}
+
+#input-mirror .mention-at { opacity: .55; }
+
+
+/* 打开模式的荧光。铺满整个透明窗口，垫在 #app 下面，
+   路径贴着搜索框边缘走，往里的一半被搜索框挡住，只剩朝外的光。
+   stroke-dashoffset 1→0 就是"画线"：pathLength=1 把整条路径归一化，
+   窗口尺寸怎么变动画都是同一个节奏 */
+#o-border {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  overflow: visible;
+  /* 模糊加在整个 svg 上而不是每条路径上：两半一起模糊，接缝处是连续的 */
+  filter: blur(3px);
+  /* 铺满整个窗口的模糊层很贵，窗口每变一帧都要重算。
+     不在打开模式时直接不画：等收回动画（--t）走完再隐藏 */
+  visibility: hidden;
+  transition: visibility 0s linear 0.3s;
+}
+
+body.o-mode #o-border {
+  visibility: visible;
+  transition: visibility 0s;
+}
+
+#o-border path {
+  fill: none;
+  /* 没有实线，只有一条模糊过的光带：路径压在窗口边缘上，
+     外侧一半被窗口裁掉，露在里面的是从边缘往里渐隐的荧光。
+     画线动画不受影响，光带的头也是虚的，看着像光在沿边缘流过去 */
+  stroke: rgba(var(--accent-rgb), 0.45);
+  stroke-width: 7;
+  /* 两条半边在上下中点对接，用平头才不会叠出一个亮点 */
+  stroke-linecap: butt;
+  stroke-dasharray: 1 1;
+  stroke-dashoffset: 1;
+  /* 退出：原路收回到下边缘中点，比画出来快一点 */
+  transition: stroke-dashoffset var(--t) var(--ease-in);
+}
+
+body.o-mode #o-border path {
+  stroke-dashoffset: 0;
+  /* 画线是这里唯一刻意放慢的动画：要让人看清光是从哪里出发、在哪里合拢 */
+  transition: stroke-dashoffset 0.45s var(--ease);
+}
+
+/* 内容超过一行就降一档字号，多行时不至于太占地方 */
+#query-input.multiline {
+  font-size: 15px;
+}
+
+#top-row button {
+  border: none;
+  background: transparent;
+  font-size: 15px;
+  cursor: pointer;
+  padding: 4px 7px;
+  color: var(--label-3);
+  flex-shrink: 0;
+  border-radius: var(--r-sm);
+  line-height: 1;
+}
+
+#top-row button:hover {
+  color: var(--label);
+  background: var(--fill);
+}
+
+/* 箭头用 SVG 描边画，圆头圆角、线宽 2.2，比 ↓ 这个字形粗润得多。
+   收起时整体旋转 180 度，顺便有个转场 */
+#expand-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* 打开模式下整个按钮收走：宽度、内边距收到 0，输入框顺势往右长；
+     箭头同时往下沉并淡出，像是沉下去了。退出时反过来长回来 */
+  max-width: 40px;
+  overflow: hidden;
+  transition:
+    max-width var(--t) var(--ease),
+    padding var(--t) var(--ease),
+    opacity var(--t-fast) ease,
+    color var(--t-fast) ease,
+    background var(--t-fast) ease;
+}
+
+#app.o-mode #expand-btn {
+  max-width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 箭头下沉用独立的 translate 属性，不碰 transform——那个留给展开时的翻转 */
+#app.o-mode #expand-btn svg {
+  translate: 0 10px;
+}
+
+#expand-btn svg {
+  display: block;
+  /* 旋转由 JS 在窗口尺寸动画结束后才触发，所以这里不用再靠时长去错开。
+     --t-slow 让它正好收尾在侧栏滑出（--t）之后一点。
+     translate 是打开模式下箭头下沉用的 */
+  transition:
+    transform var(--t-slow) var(--ease),
+    translate var(--t) var(--ease);
+}
+
+#expand-btn.flipped svg {
+  transform: rotate(180deg);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--label-3);
+}
+
+#settings-panel {
+  position: relative; /* 给 #settings-heading 定位 */
+  flex-shrink: 0;
+  /* 不画分隔线，用分组背景把设置区和输入栏分开 */
+  background: var(--bg-grouped);
+  /* 顶部这 38px 是留给"齿轮下沉后变成的标题"的位置，
+     标题本体是那颗 position:fixed 的按钮，浮在这片留白上 */
+  padding-top: 38px;
+  max-height: 280px;
+  overflow: hidden;
+  /* 展开时 JS 会把 max-height 设成量出来的精确高度，
+     这样这条曲线才真的作用在可见高度上 */
+  transition: max-height var(--t) var(--ease);
+}
+
+/* 只露出标题那一条，设置项全部收起 */
+#settings-panel.collapsed {
+  max-height: 38px;
+}
+
+/* 气泡升回搜索栏之后，那 38px 的标题留白也该收掉，
+   否则窗口底下会一直挂着一条空白直到关闭流程走完。
+   写在 .collapsed 之后，同权重靠源码顺序赢 */
+#settings-panel.closing {
+  max-height: 0;
+  padding-top: 0;
+  transition: max-height var(--t) var(--ease), padding-top var(--t) var(--ease);
+}
+
+/* 设置项不是整块一起亮，而是自上而下错开一点点，像水漫过去 */
+#settings-panel > * {
+  transition: opacity var(--t) ease, transform var(--t) var(--ease);
+}
+
+#settings-panel > *:nth-child(1) { transition-delay: 8ms; }
+#settings-panel > *:nth-child(2) { transition-delay: 36ms; }
+#settings-panel > *:nth-child(3) { transition-delay: 64ms; }
+#settings-panel > *:nth-child(4) { transition-delay: 92ms; }
+#settings-panel > *:nth-child(5) { transition-delay: 118ms; }
+
+/* 展开态的标题：静态地待在面板顶部那 38px 留白里，随面板升降。
+   尺寸、字号、图标位置跟折叠态那个"变成标题的气泡"一致，两边看起来是同一个东西。
+   left 16px 让图标左缘和下面的输入框、勾选框对齐 */
+#settings-heading {
+  display: none;
+  position: absolute;
+  top: 10px;
+  left: 16px;
+  height: 26px;
+  align-items: center;
+  gap: 7px;
+  color: var(--label);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+}
+
+#app.is-expanded #settings-heading {
+  display: flex;
+}
+
+/* 它是标题，不参与下面设置项那套"错峰淡入、收起时上移变透明"的动画 */
+#settings-panel > #settings-heading,
+#settings-panel.collapsed > #settings-heading {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+
+#settings-panel.collapsed > * {
+  opacity: 0;
+  transform: translateY(-7px);
+  transition-delay: 0s; /* 收起不要错峰，拖泥带水 */
+}
+
+/* 落地涟漪：从滴落点摊开并淡掉 */
+#drop-ripple {
+  position: fixed;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(var(--accent-rgb), 0.22) 0%,
+    rgba(var(--accent-rgb), 0.1) 52%,
+    rgba(var(--accent-rgb), 0) 70%
+  );
+  pointer-events: none;
+  opacity: 0;
+  /* 原点放在左中：涟漪从图标处朝右绽开，跟标题条往右长的方向一致 */
+  transform-origin: left center;
+  transform: translate(0, -50%) scale(0.22);
+  z-index: 100;
+}
+
+#drop-ripple.splash {
+  animation: ripple var(--t-slow) var(--ease) forwards;
+}
+
+@keyframes ripple {
+  0% {
+    opacity: 0.6;
+    transform: translate(0, -50%) scale(0.22);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(0, -50%) scale(4.2);
+  }
+}
+
+/* 开关行：文字在左、开关在右，跟苹果的设置列表一样。
+   DOM 里 input 在前，用 row-reverse 把它挪到右边 */
+.model-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: var(--label);
+}
+.model-row select {
+  max-width: 70%;
+  min-width: 134px;
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--accent-rgb), .18);
+  border-radius: 9px;
+  background: var(--fill-2);
+  color: var(--label);
+  font: inherit;
+  cursor: pointer;
+}
+.model-row select:focus-visible { outline: 2px solid rgba(var(--accent-rgb), .5); outline-offset: 2px; }
+.model-row select:disabled { opacity: .6; cursor: wait; }
+.model-status { margin: 0; padding: 2px 16px 7px; font-size: 12px; color: var(--label); }
+.toggle-row {
+  display: flex;
+  flex-direction: row-reverse;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 16px;
+  font-size: 13px;
+  color: var(--label);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-row:last-of-type {
+  padding-bottom: 14px;
+}
+
+/* 勾选框改成拨动开关：去掉系统外观，底座是胶囊，白色圆钮用伪元素画 */
+.toggle-row input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex-shrink: 0;
+  width: 34px;
+  height: 20px;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--fill-2);
+  cursor: pointer;
+  outline: none;
+  transition: background var(--t) var(--ease);
+}
+
+.toggle-row input[type="checkbox"]::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.18);
+  /* 圆钮滑过去带一点回弹，这是苹果开关最有辨识度的地方 */
+  transition: transform var(--t) var(--ease-spring);
+}
+
+.toggle-row input[type="checkbox"]:checked {
+  background: var(--accent);
+}
+
+.toggle-row input[type="checkbox"]:checked::before {
+  transform: translateX(14px);
+}
+
+/* 键盘操作时给一圈焦点环，鼠标点的时候不出现 */
+.toggle-row input[type="checkbox"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.35);
+}
+
+.key-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+  padding: 11px 16px 9px;
+  font-size: 12px;
+  color: var(--label-2);
+}
+
+.key-row > span:first-child {
+  flex-shrink: 0;
+}
+
+/* 输入框和小眼睛共用一个底：焦点样式挂在外层，
+   点眼睛时焦点跑到按钮上，底色也不会闪一下 */
+.key-field {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  background: var(--fill);
+  border-radius: var(--r-sm);
+  padding-right: 3px;
+  transition: background var(--t-fast) ease, box-shadow var(--t-fast) ease;
+}
+
+/* 苹果的输入框聚焦：底色变白 + 一圈半透明的强调色焦点环 */
+.key-field:focus-within {
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.3), 0 0 0 0.5px rgba(var(--accent-rgb), 0.6);
+}
+
+#api-key-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--label);
+  font-size: 13.5px;
+  font-family: inherit;
+  /* 固定行高：密文态要放大字号，行高不锁住的话切换明文/密文时输入框会跳高 */
+  line-height: 20px;
+  padding: 8px 10px;
+}
+
+/* 密文的圆点大小是跟着 font-size 走的，13.5px 下小得像灰尘。
+   只在 password 态放大并拉开间距，明文仍是正常字号 */
+#api-key-input[type="password"] {
+  font-size: 19px;
+  letter-spacing: 2.5px;
+}
+
+#key-eye {
+  border: none;
+  background: transparent;
+  color: var(--label-3);
+  cursor: pointer;
+  padding: 5px 6px;
+  display: flex;
+  align-items: center;
+  border-radius: var(--r-xs);
+  flex-shrink: 0;
+}
+
+#key-eye:hover {
+  color: var(--label-2);
+}
+
+#key-eye svg {
+  display: block;
+  pointer-events: none;
+}
+
+.eye-slash {
+  opacity: 0;
+  transition: opacity var(--t-fast) ease;
+}
+
+#key-eye.on .eye-slash {
+  opacity: 1;
+}
+
+#result {
+  will-change: transform;
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 10px 16px 14px;
+  color: var(--label);
+  font-size: 14px;
+  line-height: 1.55;
+  /* 输入和结果之间是这里唯一保留的分隔线：Spotlight 也这么分，但用最淡的一档 */
+  border-top: 1px solid var(--separator);
+}
+
+/* Formulas use bundled fonts, inherit the theme, and scroll within their
+   own row instead of widening the launcher or changing its native size. */
+.math-display {
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  margin: 12px 0;
+  padding: 3px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.math-display .katex-display { margin: 0; width: max-content; min-width: 100%; }
+#result .katex, .msg-body .katex { font-size: 1.08em; }
+.katex-error { color: var(--label-2) !important; white-space: pre-wrap; }
+
+/* ---------- 展开态 ---------- */
+
+/* 会话栏靠负 margin 藏到窗口左侧外面，展开动画结束后再滑出来。
+   用 margin-left 而不是改 width：宽度始终是 210px，
+   列表内容不会在动画过程中被挤压、文字省略号来回跳 */
+#session-list {
+  width: 210px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  padding: 8px;
+  /* 侧栏靠一层分组底色和主区分开，不画竖线 */
+  background: var(--bg-grouped);
+  margin-left: -210px;
+  opacity: 0;
+  transition: margin-left var(--t) var(--ease), opacity var(--t-fast) ease;
+}
+
+#session-list.open {
+  margin-left: 0;
+  opacity: 1;
+}
+
+/* 左下角常驻着设置按钮，列表底部留出位置，最后一条不会被它盖住 */
+#app.is-expanded #session-list {
+  padding-bottom: 52px;
+}
+
+/* 新对话：强调色的浅底按钮（苹果的 tinted 按钮），取代以前的虚线框 */
+.new-session-btn {
+  width: 100%;
+  border: none;
+  background: rgba(var(--accent-rgb), 0.1);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background var(--t-fast) ease;
+}
+
+.new-session-btn:hover {
+  background: rgba(var(--accent-rgb), 0.16);
+}
+
+.session-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 8px;
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--label);
+  transition: background var(--t-fast) ease;
+}
+
+.session-item:hover {
+  background: var(--fill);
+}
+
+.session-item.active {
+  background: rgba(var(--accent-rgb), 0.14);
+  color: var(--label);
+  font-weight: 500;
+}
+
+.session-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.session-del {
+  border: none;
+  background: transparent;
+  color: var(--label-3);
+  font-size: 15px;
+  line-height: 1;
+  padding: 0 3px;
+  cursor: pointer;
+  opacity: 0;
+  flex-shrink: 0;
+  transition: opacity var(--t-fast) ease, color var(--t-fast) ease;
+}
+
+.session-item:hover .session-del {
+  opacity: 1;
+}
+
+.session-del:hover {
+  color: var(--red);
+}
+
+#chat-view {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 14px 18px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--label);
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity var(--t-fast) ease, transform var(--t-fast) var(--ease);
+}
+
+/* 展开/收起动画的起止状态：内容淡入淡出并带一点位移，
+   跟窗口尺寸缓动同时进行，不然会看到一块空白先撑开 */
+#chat-view.fade-start {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+
+.msg {
+  display: flex;
+  margin: 10px 0;
+}
+
+.msg-user {
+  justify-content: flex-end;
+}
+
+/* 只在展开/收起的变形期间：屏幕外看不见的消息先不排版、不绘制，
+   窗口每帧只需要管屏幕上那几条。平时不开——没画过的消息只按估计高度占位，
+   流式输出每个字都会重建列表，常开的话贴底会一直抖。
+   JS 在变形开始时给 #chat-view 加 .lazy，结束时摘掉并重新贴底 */
+#chat-view.lazy .msg {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 90px;
+}
+
+/* 气泡：大圆角 + 靠近说话方那一角收小，像 iMessage */
+.msg-user .msg-body {
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--r-bubble) var(--r-bubble) 5px var(--r-bubble);
+  padding: 8px 13px;
+  max-width: 78%;
+}
+
+.msg-assistant .msg-body {
+  background: var(--surface);
+  /* 只要一圈不模糊的细轮廓。以前还有一层模糊阴影，几十个气泡各画一份，
+     窗口变形时每帧都要重新栅格化，很贵 */
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.07);
+  border-radius: var(--r-bubble) var(--r-bubble) var(--r-bubble) 5px;
+  padding: 8px 13px;
+  max-width: 92%;
+}
+
+/* 深度思考的推理过程：压低对比度，明确区别于正文回答 */
+.reasoning {
+  white-space: pre-wrap;
+  font-size: 0.92em;
+  line-height: 1.55;
+  color: var(--label-2);
+  border-left: 2px solid var(--separator);
+  padding-left: 9px;
+  margin: 0 0 9px;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+/* 本地说明（/?、/version）：强调色的浅底块，不再用左边的粗竖条 */
+.msg-help .msg-body {
+  background: rgba(var(--accent-rgb), 0.07);
+  border-radius: var(--r-md);
+  padding: 10px 14px;
+  max-width: 92%;
+}
+
+.msg-error .msg-body {
+  background: rgba(255, 59, 48, 0.08);
+  color: #d70015;
+  border-radius: var(--r-md);
+  padding: 8px 12px;
+  max-width: 92%;
+}
+
+.msg-body > *:first-child { margin-top: 0; }
+.msg-body > *:last-child { margin-bottom: 0; }
+
+/* ---------- markdown 公共样式 ---------- */
+
+#result p, .msg-body p { margin: 8px 0; }
+#result ul, #result ol, .msg-body ul, .msg-body ol { margin: 8px 0; padding-left: 22px; }
+#result li, .msg-body li { margin: 4px 0; }
+#result h1, #result h2, #result h3,
+.msg-body h1, .msg-body h2, .msg-body h3 {
+  margin: 12px 0 6px;
+  color: var(--label);
+  font-size: 1.1em;
+  font-weight: 600;
+}
+#result code, .msg-body code {
+  background: var(--fill);
+  padding: 2px 5px;
+  border-radius: var(--r-xs);
+  /* SF Mono 是苹果的等宽字体，Windows 上没有就落到 Cascadia Mono（Win11 自带、
+     观感最接近），再兜底 Consolas */
+  font-family: "SF Mono", ui-monospace, "Cascadia Mono", Consolas, "Courier New", monospace;
+  font-size: 0.92em;
+}
+.msg-user .msg-body code {
+  background: rgba(255, 255, 255, 0.2);
+}
+#result pre, .msg-body pre {
+  background: var(--fill);
+  padding: 10px 12px;
+  border-radius: var(--r-md);
+  overflow-x: auto;
+  margin: 8px 0;
+}
+#result pre code, .msg-body pre code { background: none; padding: 0; }
+
+/* highlight.js 的主题是 vite 在运行时注入的，位置在这份样式表之后，
+   它给 .hljs 带了自己的底色和内边距。用 id 选择器把它压回透明 */
+#result pre code.hljs,
+.msg-body pre code.hljs {
+  background: transparent;
+  padding: 0;
+}
+#result a, .msg-body a { color: var(--accent); text-decoration: none; }
+#result a:hover, .msg-body a:hover { text-decoration: underline; }
+
+/* 常驻标题栏：左侧语言、右侧复制；横向滚动只作用于代码正文。 */
+.code-block {
+  position: relative;
+  background: var(--fill);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  min-width: 0;
+  margin: 8px 0;
+}
+#result .code-block pre, .msg-body .code-block pre {
+  background: transparent;
+  border-radius: 0;
+  margin: 0;
+  padding: 10px 12px;
+}
+.code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 8px 6px 12px;
+  border-bottom: 1px solid var(--separator);
+  color: var(--label-2);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.code-language {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.copy-btn {
+  flex-shrink: 0;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  box-shadow: 0 0 0 0.5px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  color: var(--label-2);
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1;
+  padding: 5px 8px;
+  cursor: pointer;
+  transition: color var(--t-fast) ease, background var(--t-fast) ease;
+}
+.copy-btn:hover {
+  color: var(--label);
+}
+.copy-btn.copied {
+  opacity: 1;
+  background: rgba(52, 199, 89, 0.14);
+  box-shadow: none;
+  color: #248a3d;
+}
+
+/* 滚动条：细、圆头、不占轨道底色，悬停时加深一点，跟 macOS 的浮动滚动条一个意思 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 999px;
+  /* 透明边框 + background-clip 让滑块比轨道细，视觉上只有 4px */
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.34);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* !important 是必须的：#expanded 自己带 display:flex，
+   ID 选择器(100)压过类选择器(10)，不加的话 .hidden 对它根本不生效 */
+.hidden { display: none !important; }
+
+/* ---------- 主题（theme.js，格式见 THEME_SPEC.md） ---------- */
+
+/* 徽标：主题启用时替代展开按钮里的箭头。徽标在按钮内部，点击照常展开 / 收起；
+   箭头改为绝对定位叠在徽标上方，平时隐去，悬停或键盘聚焦时与徽标交叉淡入淡出 */
+#theme-badge {
+  display: block;
+  width: auto;
+  max-width: 34px;
+  max-height: 34px;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  animation: theme-badge-in var(--t-slow) var(--ease-spring);
+  transition: opacity var(--t-fast) ease, scale var(--t-fast) var(--ease);
+}
+
+#expand-btn.has-badge {
+  position: relative;
+  max-width: 48px;
+  padding: 2px 4px;
+}
+
+#expand-btn.has-badge svg {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -11px 0 0 -11px;
+  opacity: 0;
+  scale: 0.7;
+  transition:
+    transform var(--t-slow) var(--ease),
+    translate var(--t) var(--ease),
+    opacity var(--t-fast) ease,
+    scale var(--t-fast) var(--ease);
+}
+
+#expand-btn.has-badge:hover svg,
+#expand-btn.has-badge:focus-visible svg {
+  opacity: 1;
+  scale: 1;
+}
+
+#expand-btn.has-badge:hover #theme-badge,
+#expand-btn.has-badge:focus-visible #theme-badge {
+  opacity: 0;
+  scale: 0.7;
+}
+
+@keyframes theme-badge-in {
+  from { opacity: 0; transform: scale(0.6) rotate(-8deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 底纹：#app 是层叠上下文（position + z-index），z-index:-1 正好落在
+   #app 自己的底色之上、所有内容之下 */
+#theme-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-repeat: repeat;
+}
+
+/* 框内特效的画布，盖在内容上面，不挡鼠标 */
+.theme-fx {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ---------- 命令提示（cmdhint.js） ---------- */
+
+/* 输入框里光标后面的灰字：还差哪些参数 */
+#input-mirror .cmd-ghost {
+  color: var(--label-3);
+  text-shadow: none;
+}
+
+/* 下拉说明：折叠态挂在输入栏下面；展开态输入栏沉在底部，提示改到输入栏上面 */
+#cmd-hint {
+  position: relative; /* 高亮块按它定位 */
+  padding: 0 10px 8px 12px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--label-2);
+  animation: cmd-hint-in var(--t-fast) var(--ease);
+}
+
+#app.is-expanded #cmd-hint {
+  order: -1;
+  padding-top: 8px;
+  padding-bottom: 2px;
+}
+
+@keyframes cmd-hint-in {
+  from { opacity: 0; transform: translateY(-3px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.hint-row {
+  position: relative; /* 压在高亮块上面 */
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 4px 8px;
+  border-radius: var(--r-sm);
+  cursor: default;
+  white-space: nowrap;
+}
+
+/* 选中行的底色由 .hint-pill 画（会滑动）；悬停只给一层很淡的底，免得和高亮块叠成两层 */
+.hint-row:hover:not(.active) {
+  background: rgba(120, 120, 128, 0.06);
+}
+
+.hint-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: var(--r-sm);
+  background: var(--fill);
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity var(--t-fast) ease;
+}
+
+.hint-pill.off {
+  opacity: 0;
+}
+
+.hint-name {
+  color: var(--accent);
+  font-weight: 500;
+  min-width: 52px;
+}
+
+.hint-args {
+  color: var(--label);
+}
+
+.hint-desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--label-2);
+}
+
+.hint-tag {
+  flex-shrink: 0;
+  font-size: 11px;
+  line-height: 1.6;
+  padding: 0 6px;
+  border-radius: var(--r-xs);
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+}
+
+/* 命令已认出：用法一行，正在填的参数加粗、下面带一道强调色的线 */
+.hint-sig {
+  padding: 4px 8px 0;
+  color: var(--label-2);
+}
+
+.hint-sig .cmd {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.hint-sig .cur {
+  color: var(--label);
+  font-weight: 600;
+}
+
+/* 正在填的参数下面那道线。单独一个元素，换参数时由 cmdhint.js 用弹簧推过去 */
+.hint-bar {
+  position: absolute;
+  left: 0;
+  height: 2px;
+  border-radius: 1px;
+  background: rgba(var(--accent-rgb), 0.55);
+  pointer-events: none;
+  will-change: transform;
+  transition: opacity var(--t-fast) ease;
+}
+
+.hint-bar.off {
+  opacity: 0;
+}
+
+.hint-desc-line {
+  padding: 2px 8px 4px;
+  color: var(--label-3);
+}
+
+.hint-foot {
+  padding: 4px 8px 0;
+  font-size: 12px;
+  color: var(--label-3);
+}
+
+.hint-err {
+  padding: 4px 8px 0;
+  color: var(--red);
+  white-space: normal;
+}
+
+/* ---------- 新版本提示（main.js 的 /update） ---------- */
+
+#update-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 12px 8px 16px;
+  padding: 5px 10px;
+  border-radius: var(--r-sm);
+  font-size: 12.5px;
+  color: var(--label-2);
+  background: rgba(var(--accent-rgb), 0.08);
+  cursor: default;
+  animation: cmd-hint-in var(--t-fast) var(--ease);
+}
+
+#update-bar:hover {
+  background: rgba(var(--accent-rgb), 0.13);
+}
+
+#update-bar .upd-action {
+  margin-left: auto;
+  color: var(--accent);
+}
+
+/* 命令提示展开时让位；展开态输入栏沉在底部，提示放到输入栏上面 */
+#cmd-hint:not(.hidden) ~ #update-bar {
+  display: none;
+}
+
+#app.is-expanded #update-bar {
+  order: -1;
+  margin-top: 8px;
+}
+/* Non-interactive voice feedback, kept out of the textarea's editing layer. */
+.voice-input-status { position: absolute; right: 12px; bottom: 2px; max-width: 85%; font-size: 10px; color: var(--accent, #8b6c42); pointer-events: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.voice-input-status:empty { display: none; }
+#top-row { isolation: isolate; }
+.voice-ripples { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; border-radius: inherit; opacity: 0; transition: opacity 420ms ease; }
+.voice-listening .voice-ripples { opacity: 1; }
+.voice-ripples i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160px;
+  height: 100px;
+  margin: -50px 0 0 -80px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse,
+    transparent 45%,
+    color-mix(in srgb, var(--accent, #3478c8) 15%, transparent) 66%,
+    transparent 72%);
+  border: 1px solid color-mix(in srgb, var(--accent, #3478c8) 12%, transparent);
+  opacity: 0;
+  animation: voice-water 3.6s cubic-bezier(.18,.55,.35,1) infinite paused;
+}
+.voice-listening .voice-ripples i { animation-play-state: running; }
+.voice-ripples i:nth-child(2) { animation-delay: -1.2s; }
+.voice-ripples i:nth-child(3) { animation-delay: -2.4s; }
+@keyframes voice-water {
+  0% { transform: scale(.25); opacity: 0; }
+  18% { opacity: .85; }
+  100% { transform: scale(5); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .voice-ripples { transition: none; background: color-mix(in srgb, var(--accent, #3478c8) 7%, transparent); }
+  .voice-ripples i { display: none; }
+}
+
+/* Keep scrollbar geometry stable while moving scroll containers between faces.
+   Only the transient thumb is hidden; final overflowing answers stay scrollable. */
+#app.collapsing ::-webkit-scrollbar-thumb,
+#app.collapse-settling ::-webkit-scrollbar-thumb{background-color:transparent!important}
+
+#mention-dismiss{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+#input-mirror .mention-metrics{visibility:hidden}
+#input-mirror .mention-face{position:absolute;left:2px;right:27px;top:0;bottom:0;display:flex;align-items:center;white-space:nowrap;font-family:"Cascadia Code","Cascadia Mono",Consolas,"Microsoft YaHei",monospace;font-size:.9em;font-weight:600;letter-spacing:.025em;color:var(--accent)}
+#input-mirror .mention-face .mention-at{opacity:.6;font-weight:400;margin-right:2px}
+#top-row .mention-remove{position:absolute;width:18px;height:18px;min-width:0;padding:0;display:grid;place-items:center;border:0;border-radius:4px;background:transparent;box-shadow:none;color:var(--accent);opacity:.65;font:14px/1 "Segoe UI",sans-serif;pointer-events:auto;cursor:pointer;transition:opacity 140ms,background-color 140ms}
+#top-row .mention-remove::before{content:"";position:absolute;left:-5px;top:4px;bottom:4px;width:1px;background:rgba(var(--accent-rgb),.16);pointer-events:none}
+#top-row .mention-remove:hover,#top-row .mention-remove:focus-visible{opacity:1;background:rgba(var(--accent-rgb),.12);color:var(--accent);outline:none}
+
+.hint-row[data-fill^="@story"] .hint-name::before{content:"";display:inline-block;width:20px;height:20px;margin-right:7px;vertical-align:-4px;background:url("/story-icon.png") center/contain no-repeat}
+
+.plugins-manager-link{border:0;background:transparent;color:inherit;font:inherit;font-size:12px;cursor:pointer;padding:8px 0;text-align:left;opacity:.8}

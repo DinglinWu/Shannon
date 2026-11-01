@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="zh-CN" class="window-hidden">
+<head>
+  <meta charset="UTF-8" />
+  <title>闪念</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- 打开模式（单按 Alt）的橙色荧光。垫在 #app 后面、铺满整个透明窗口，
+       两条线都从搜索框下边缘中点出发，一左一右沿边往上画，在上边缘中点会合。
+       搜索框本体不透明，把往里的那一半光挡住，露出来的只有朝外的荧光 -->
+  <svg id="o-border" aria-hidden="true">
+    <path id="o-border-l" pathLength="1" />
+    <path id="o-border-r" pathLength="1" />
+  </svg>
+  <!-- 移动手柄：上圆下尖的水滴，尖端朝下正好点在搜索框上沿，
+       放在搜索框上方的透明边里，不再压着输入框 -->
+  <!-- 拖动条：铺满搜索框上方整条透明边，按住任何位置都能拖动窗口，
+       不用非得对准中间那个水滴 -->
+  <div id="drag-strip" data-tauri-drag-region></div>
+  <div id="move-grip" data-tauri-drag-region aria-label="拖动以移动窗口">
+    <svg viewBox="0 0 26 23" width="26" height="23" aria-hidden="true">
+      <!-- 圆心 (13,11) 半径 10 的圆顶，两侧顺滑收到底部 (13,22.6) 的尖 -->
+      <path class="drop" d="M13 22.6 C10.2 19.2 3 16.2 3 11 A10 10 0 1 1 23 11 C23 16.2 15.8 19.2 13 22.6 Z" />
+      <!-- 十字箭头，原图是 16x16，缩到 10px 放在圆心 -->
+      <path class="cross" transform="translate(8 6) scale(0.625)"
+            d="M8 1.2 L10 3.6 H6 Z M8 14.8 L6 12.4 H10 Z M1.2 8 L3.6 6 V10 Z M14.8 8 L12.4 10 V6 Z M7.4 3.6 h1.2 v8.8 h-1.2 Z M3.6 7.4 h8.8 v1.2 h-8.8 Z"/>
+    </svg>
+  </div>
+  <div id="app">
+    <div id="session-list" class="hidden"></div>
+    <div id="main-col">
+      <!-- 输入栏 + 设置面板。展开态下两者作为一个整体用 transform 往上推，
+           打开设置时只做位移、不改布局，见 style.css 里的 #dock -->
+      <div id="dock">
+        <div id="top-row" data-tauri-drag-region>
+          <textarea id="query-input" rows="1" placeholder="For you, always."
+                    autofocus></textarea>
+          <button id="expand-btn" aria-label="展开历史对话（Ctrl+E）">
+            <svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true"
+                 fill="none" stroke="currentColor" stroke-width="2.2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <!-- 竖线和尖头必须是同一条 path：颜色是半透明的灰，
+                   分成两条的话尖端重叠处会叠出一块更深的颜色，看着像拼起来的 -->
+              <path d="M8 3.4 V12.2 M4.4 8.6 L8 12.2 L11.6 8.6" />
+            </svg>
+          </button>
+        </div>
+        <div id="settings-panel" class="hidden">
+          <label class="key-row">
+            <span>DeepSeek API Key</span>
+            <span class="key-field">
+              <input id="api-key-input" type="password" spellcheck="false" placeholder="粘贴后按 Enter 保存" />
+              <button id="key-eye" type="button" aria-label="显示或隐藏 API Key">
+                <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"
+                     fill="none" stroke="currentColor" stroke-width="1.5"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1.4 8s2.4-4.3 6.6-4.3S14.6 8 14.6 8s-2.4 4.3-6.6 4.3S1.4 8 1.4 8Z" />
+                  <circle cx="8" cy="8" r="1.9" />
+                  <path class="eye-slash" d="M3.1 12.9 12.9 3.1" />
+                </svg>
+              </button>
+            </span>
+          </label>
+          <label class="model-row">
+            <span>模型</span>
+            <select id="model-select" aria-label="选择 AI 模型">
+              <option value="deepseek-flash">V4 Flash</option>
+              <option value="deepseek-v4-pro">V4 Pro</option>
+            </select>
+          </label>
+          <p id="model-status" class="model-status" role="status" hidden></p>
+          <label class="toggle-row">
+            <input id="deep-checkbox" type="checkbox" />
+            <span>深度思考</span>
+          </label>
+          <label class="toggle-row">
+            <input id="search-checkbox" type="checkbox" />
+            <span>联网搜索</span>
+          </label>
+          <label class="toggle-row">
+            <input id="autostart-checkbox" type="checkbox" />
+            <span>开机自启动</span>
+          </label>
+          <label class="toggle-row">
+            <input id="proxy-checkbox" type="checkbox" />
+            <span>使用系统代理</span>
+          </label>
+          <button type="button" id="plugins-manager-btn" class="plugins-manager-link">插件管理</button>
+          <!-- 展开态的设置标题。它是面板的一部分，跟着面板一起升降，不单独做动画。
+               放在最后是为了不打乱上面各项的 nth-child 错峰延迟；
+               折叠态不显示，那边的标题是齿轮气泡落下来变的 -->
+          <div id="settings-heading" aria-label="收起设置">
+            <svg viewBox="0 0 16 16" width="17" height="17" aria-hidden="true"
+                 fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+              <path d="M2.6 4.4 H13.4" />
+              <path d="M2.6 8 H13.4" />
+              <path d="M2.6 11.6 H13.4" />
+              <circle cx="5.6" cy="4.4" r="1.75" fill="#fff" />
+              <circle cx="10.2" cy="8" r="1.75" fill="#fff" />
+              <circle cx="6.6" cy="11.6" r="1.75" fill="#fff" />
+            </svg>
+            <span>设置</span>
+          </div>
+        </div>
+      </div>
+      <div id="result" class="hidden"></div>
+      <div id="chat-view" class="hidden"></div>
+    </div>
+    <button id="settings-btn" aria-label="设置">
+      <svg viewBox="0 0 16 16" width="17" height="17" aria-hidden="true"
+           fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+        <path d="M2.6 4.4 H13.4" />
+        <path d="M2.6 8 H13.4" />
+        <path d="M2.6 11.6 H13.4" />
+        <circle cx="5.6" cy="4.4" r="1.75" fill="#fff" />
+        <circle cx="10.2" cy="8" r="1.75" fill="#fff" />
+        <circle cx="6.6" cy="11.6" r="1.75" fill="#fff" />
+      </svg>
+      <span id="settings-label">设置</span>
+    </button>
+    <div id="drop-ripple"></div>
+    <div id="resize-grip" aria-label="拖动以调整窗口大小">
+      <svg viewBox="0 0 22 22" width="22" height="22" aria-hidden="true"
+           fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <!-- 窗口圆角 12px 的圆心在本地 (10,10)，弧与它同心。
+             只留里面这一道，贴着窗口边缘的那道和圆角挤在一起，看着像重影 -->
+        <path d="M16 10 A6 6 0 0 1 10 16" />
+      </svg>
+    </div>
+  </div>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+{
+  "spec": 1,
+  "generated": 1792084136,
+  "themes": [
+    {
+      "id": "chongyang-2026",
+      "files": {
+        "chrysanthemum.svg": {
+          "size": 1699,
+          "sha256": "308597d85e835ce2645b1b03380583c817a3e2d727567fb001c8e9071d193486"
+        },
+        "mountains.svg": {
+          "size": 555,
+          "sha256": "3fdaa811a163a7dce6dcf042a8353bcb779faffdcb3f031941e08f43726e6c00"
+        },
+        "petal.svg": {
+          "size": 542,
+          "sha256": "47694cbbcf129c2ace205cc8d364f99ab4aec09df117038c1e9926d954530070"
+        },
+        "theme.json": {
+          "size": 993,
+          "sha256": "7730c96f60030f697092b544472f350825def175a1291d0d39824c23bcbe39b7"
+        }
+      }
+    }
+  ]
+}

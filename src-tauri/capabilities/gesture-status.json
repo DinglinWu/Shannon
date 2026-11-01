@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "gesture-status",
+  "description": "Allow gesture status island to reveal its hover controls",
+  "windows": [
+    "gesture-status"
+  ],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-size"
+  ]
+}

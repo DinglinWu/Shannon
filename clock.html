@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>闪念 · 计时器</title>
+  <link rel="stylesheet" href="/src/clock.css" />
+</head>
+<body>
+  <main id="setup">
+    <header><span>闪念</span><button class="close" type="button" aria-label="关闭计时器">×</button></header>
+    <h1>从此刻开始。</h1>
+    <form id="clock-form">
+      <fieldset class="modes" aria-label="计时方式" title="左右方向键切换；编辑时在光标边界再按一次切换">
+        <label><input type="radio" name="mode" value="down" checked /><span>倒计时</span></label>
+        <label><input type="radio" name="mode" value="up" /><span>正计时</span></label>
+      </fieldset>
+      <div id="mode-content">
+      <div id="duration-field">
+        <label for="duration">时长</label>
+        <input id="duration" type="text" value="25" autocomplete="off" spellcheck="false" aria-describedby="duration-hint error" />
+        <small id="duration-hint">默认按分钟，也可以输入 5m、90s 或 01:30</small>
+      </div>
+      </div>
+      <p id="error" role="alert"></p>
+      <button id="start" type="submit">开始计时 <span aria-hidden="true">↗</span></button>
+    </form>
+  </main>
+  <section id="notch" hidden aria-label="屏幕顶部计时器">
+    <div id="timer-line"><span id="indicator"></span><span id="mode-label">倒计时</span><output id="time" aria-label="计时">25:00</output></div>
+    <div id="controls" inert>
+      <button id="pause" type="button" title="暂停" aria-label="暂停" data-action="pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path class="pause-icon" d="M9 5v14M15 5v14"/><path class="play-icon" d="m9 5 10 7-10 7Z"/></svg>
+      </button>
+      <button id="restart" type="button" title="重新开始计时" aria-label="重新开始计时">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 1.5 7M4 4v6h6"/></svg>
+      </button>
+      <button class="close" type="button" title="关闭计时器" aria-label="关闭计时器">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <p id="notch-error" role="alert" hidden></p>
+    <span id="announcement" class="sr-only" role="status" aria-live="polite"></span>
+  </section>
+  <script type="module" src="/src/clock.js"></script>
+</body>
+</html>

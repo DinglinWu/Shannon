@@ -1,0 +1,7 @@
+# Project-local default. Reuse the HTTPS mirror and cache already used by the
+# --mirror option; never disable certificate verification to bypass TLS errors.
+[source.crates-io]
+replace-with = "plugin-build-mirror"
+
+[source.plugin-build-mirror]
+registry = "sparse+https://rsproxy.cn/index/"

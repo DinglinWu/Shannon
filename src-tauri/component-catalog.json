@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "components": [
+    {
+      "name": "gesture",
+      "version": "1",
+      "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v2.5.0/gesture-1-windows-x64.zip",
+      "sha256": "038bcabe453e272c5fe5daf4dc1b571abc14fe48014a93737884c2a4d46cbfd3",
+      "bytes": 113615345,
+      "unpacked_bytes": 301052949
+    },
+    {
+      "name": "voice",
+      "version": "1",
+      "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v2.5.0/voice-1-windows-x64.zip",
+      "sha256": "53ec3d16b3f0c015f1cb7f9124d550e26bb1d4215ba560343e41296c93b3259b",
+      "bytes": 167791393,
+      "unpacked_bytes": 259099593
+    }
+  ]
+}

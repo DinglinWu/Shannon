@@ -1,0 +1,38 @@
+{
+  "spec": 1,
+  "id": "chongyang-2026",
+  "name": "重阳",
+  "author": "Shannon",
+  "when": { "from": "2026-10-18", "to": "2026-10-18" },
+  "priority": 10,
+  "tokens": {
+    "--accent": "#99601c",
+    "--bg": "#fcf8ef",
+    "--bg-grouped": "#f3ecdc",
+    "--surface": "#fffdf6",
+    "--fill": "rgba(153, 96, 28, 0.08)",
+    "--fill-2": "rgba(153, 96, 28, 0.14)",
+    "--separator": "rgba(130, 101, 56, 0.12)"
+  },
+  "slots": {
+    "placeholder": "秋光正好，岁岁安康",
+    "badge": { "image": "chrysanthemum.svg", "height": 32, "label": "重阳金菊" },
+    "pattern": { "image": "mountains.svg", "opacity": 0.045, "size": 180 }
+  },
+  "enter": {
+    "effect": "particles",
+    "scope": "screen",
+    "frequency": "daily",
+    "duration": 3200,
+    "message": "岁岁重阳，久久安康",
+    "params": {
+      "images": ["petal.svg"],
+      "direction": "down",
+      "count": 24,
+      "speed": [45, 85],
+      "size": [12, 22],
+      "sway": 16,
+      "spin": true
+    }
+  }
+}

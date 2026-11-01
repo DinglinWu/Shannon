@@ -1,0 +1,33 @@
+.festival-greeting {
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 64px;
+  box-sizing: border-box;
+  pointer-events: none;
+  color: var(--greeting-accent);
+  font-family: "STXingkai", "华文行楷", "STKaiti", "华文楷体", "KaiTi", "楷体", serif;
+  background: radial-gradient(ellipse at center, var(--greeting-bg) 10%, transparent 74%);
+  animation: greeting-arrive 480ms cubic-bezier(.22,1,.36,1) backwards;
+  transition: opacity 440ms ease, translate 440ms cubic-bezier(.22,1,.36,1);
+}
+.greeting-text { position: relative; z-index: 1; text-align: center; font-size: 30px; line-height: 1.45; font-weight: 400; font-synthesis: none; letter-spacing: .12em; text-wrap: balance; text-shadow: 0 1px 12px var(--greeting-bg), 0 0 4px var(--greeting-bg); }
+.greeting-text span { display: inline-block; opacity: 0; animation: greeting-word 480ms cubic-bezier(.22,1,.36,1) forwards; }
+.greeting-pattern { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; opacity: .1; }
+.greeting-badge { position: absolute; width: 40px; height: 48px; object-fit: contain; opacity: .9; }
+.greeting-badge.left { left: 10px; top: 24px; rotate: -12deg; }
+.greeting-badge.right { right: 10px; top: 24px; rotate: 12deg; }
+.greeting-ornament { position: absolute; width: 14px; height: 20px; object-fit: contain; opacity: .65; animation: greeting-float 3.6s ease-in-out infinite alternate; }
+.ornament-0 { left: 13%; top: 8px; rotate: -28deg; }
+.ornament-1 { right: 15%; top: 0; rotate: 35deg; animation-delay: -.8s; }
+.ornament-2 { left: 22%; bottom: 4px; rotate: 60deg; animation-delay: -1.2s; }
+.ornament-3 { right: 24%; bottom: 0; rotate: -55deg; animation-delay: -1.8s; }
+.festival-greeting.compact { padding: 0 12px; }
+.compact .greeting-text { font-size: 16px; }
+.compact img { display: none; }
+.festival-greeting.out { opacity: 0; translate: 0 -6px; }
+@keyframes greeting-arrive { from { opacity: 0; transform: translateY(8px) scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes greeting-word { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes greeting-float { to { transform: translate(4px, 5px); } }
+@media (prefers-reduced-motion: reduce) { .festival-greeting, .greeting-text span, .greeting-ornament { animation: none; opacity: 1; transition: none; } }

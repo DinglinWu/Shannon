@@ -1,0 +1,11 @@
+{
+  "version": "3.0.1",
+  "notes": "# 闪念 3.0.1\n\n更新说明整理日期：2026-11-01\n\n- 新增统一插件管理，支持添加、启用、停用和移除官方及第三方插件，展示开发者、功能和来源。\n- 主安装包不再包含官方插件实现；官方插件通过 Gitee 单独分发，也可导入经过校验的官方安装包。\n- 故事舞台新增紧凑人设，以限量数值、习惯和背景逐步维护角色，区分稳定性格与临时情绪、关系。\n- 修复旧角色初始化阻塞状态更新的问题；引用校验失败时可尝试一次纠正，仍保留原文与知情范围校验。\n- 优化故事对话策略，减少反复追问旧话题；支持撤回、重做、编辑最近输入和故事删除恢复。\n- 新增下载管理，并优化便签、计时器、角色聊天等工具的交互。\n\n安装包与官方插件包需分别上传至 v3.0.1 发行版。上传完成前不更新 latest.json。\n",
+  "pub_date": "2026-11-01T09:51:44Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUbER2M1ZhZ2tOcnEyMzYvZDFTK0JKNVp5aUhSdUsrT0Z1UlhISGxmRVJpUTFGb3VNWW9QdjR1bFo0N05lN0c0ZWVEVWxad0RkOWkzbXY2U2ExK3dRbXRBZVJxUkdVMXdNPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzNTI2NzAzCWZpbGU6U2hhbm5vbl8zLjAuMV94NjQtc2V0dXAuZXhlCXZlcnNpb246My4wLjEKYlBhNm1HQ1doZXA4ajhiTnVYSUp3YTFWWnVqM05QYXhLNUlFVWM5NG9hYkZON09pbWl2UE1qUXVvUlhSbHNJT2ZNZUowYUl4bnE3UlNkUmMxUXJzQ3c9PQo=",
+      "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/Shannon_3.0.1_x64-setup.exe"
+    }
+  }
+}

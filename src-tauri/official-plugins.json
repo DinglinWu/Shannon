@@ -1,0 +1,280 @@
+{
+  "schema_version": 1,
+  "repository": "https://gitee.com/wu-dinglin/shannon",
+  "plugins": [
+    {
+      "id": "note",
+      "name": "便签",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "桌面便签、待办与日期安排",
+      "features": [
+        "创建与编辑便签",
+        "安排日期、排序和完成状态",
+        "删除与恢复便签"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [],
+      "runtime": {
+        "id": "note",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/note-3.0.1-81c3603d6c51-windows-x64.zip",
+        "bytes": 8107796,
+        "sha256": "81c3603d6c51ccb9714fa4d28c18f6ac76419891799e80ead06e19ce4ae810aa",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: note\nname: 便签\nauthor: Dinglin\nversion: 3.0.1\ndescription: 桌面便签、待办与日期安排\n---\n\n# 便签\n\n## 功能说明\n\n桌面便签、待办与日期安排\n\n- 创建与编辑便签\n- 安排日期、排序和完成状态\n- 删除与恢复便签\n\n## 使用方式\n\n在闪念插件管理中安装并启用，通过 @note 调用。\n",
+        "readme_sha256": "38de58fc157fb28c39cc0f0b7a3dd149660c3d5df2cdd5bbca1c892983211374",
+        "readme_metadata": {
+          "id": "note",
+          "name": "便签",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "桌面便签、待办与日期安排"
+        }
+      }
+    },
+    {
+      "id": "clock",
+      "name": "计时器",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "正计时与倒计时",
+      "features": [
+        "正计时与倒计时",
+        "暂停、继续与桌面吸附"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [],
+      "runtime": {
+        "id": "clock",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/clock-3.0.1-842bfce291fc-windows-x64.zip",
+        "bytes": 8107762,
+        "sha256": "842bfce291fc8eef4825756c7cc5d1c4ad412be93cfb5e0d0ce143901142dcc9",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: clock\nname: 计时器\nauthor: Dinglin\nversion: 3.0.1\ndescription: 正计时与倒计时\n---\n\n# 计时器\n\n## 功能说明\n\n正计时与倒计时\n\n- 正计时与倒计时\n- 暂停、继续与桌面吸附\n\n## 使用方式\n\n在闪念插件管理中安装并启用，通过 @clock 调用。\n",
+        "readme_sha256": "058ec42acb781640e1690719cd7652de58f2970600fe4419bee2207b6abf4abd",
+        "readme_metadata": {
+          "id": "clock",
+          "name": "计时器",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "正计时与倒计时"
+        }
+      }
+    },
+    {
+      "id": "wechat",
+      "name": "微信模拟聊天",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "虚拟人物聊天、朋友圈与后台日常",
+      "features": [
+        "角色卡与自然聊天",
+        "朋友圈互动和自主日常",
+        "独立记忆与聊天记录"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [],
+      "runtime": {
+        "id": "wechat",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/wechat-3.0.1-89d11538cdbd-windows-x64.zip",
+        "bytes": 8107870,
+        "sha256": "89d11538cdbd0c634ebce4a12bdccc1651092f37b3dd4ea0ce17640ef397f050",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: wechat\nname: 微信模拟聊天\nauthor: Dinglin\nversion: 3.0.1\ndescription: 虚拟人物聊天、朋友圈与后台日常\n---\n\n# 微信模拟聊天\n\n## 功能说明\n\n虚拟人物聊天、朋友圈与后台日常\n\n- 角色卡与自然聊天\n- 朋友圈互动和自主日常\n- 独立记忆与聊天记录\n\n## 使用方式\n\n在闪念插件管理中安装并启用，输入 `@wechat 姓名` 打开指定虚拟人物聊天。这是本地 AI 模拟功能，不连接真实微信账号。\n",
+        "readme_sha256": "32e5b0bb05ae829a46584029a6dd84f59f3f6b1ef9270775c6bd9dedcc6ac5ef",
+        "readme_metadata": {
+          "id": "wechat",
+          "name": "微信模拟聊天",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "虚拟人物聊天、朋友圈与后台日常"
+        }
+      }
+    },
+    {
+      "id": "story",
+      "name": "故事舞台",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "场景演绎、人物、记忆与角色微信",
+      "features": [
+        "多人物场景演绎",
+        "逐步形成角色底色与长期记忆",
+        "撤回、编辑重演与故事恢复"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [],
+      "runtime": {
+        "id": "story",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/story-3.0.1-69e5199c4faa-windows-x64.zip",
+        "bytes": 8107823,
+        "sha256": "69e5199c4faa073914c800ab9d93208e8086baa4cbe1dbb74dfd6b292d108020",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: story\nname: 故事舞台\nauthor: Dinglin\nversion: 3.0.1\ndescription: 场景演绎、人物、记忆与角色微信\n---\n\n# 故事舞台\n\n## 功能说明\n\n场景演绎、人物、记忆与角色微信\n\n- 多人物场景演绎\n- 逐步形成角色底色与长期记忆\n- 撤回、编辑重演与故事恢复\n\n## 使用方式\n\n在闪念插件管理中安装并启用，通过 @story 调用。\n",
+        "readme_sha256": "ffbc97dac12f82fa3ed6da4fa14fd71414345c1ba450c4d387225e61fc456d64",
+        "readme_metadata": {
+          "id": "story",
+          "name": "故事舞台",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "场景演绎、人物、记忆与角色微信"
+        }
+      }
+    },
+    {
+      "id": "broadcast",
+      "name": "广播站",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "在局域网分享内容",
+      "features": [
+        "局域网内容发布",
+        "访问码与发布前确认",
+        "撤回与有效期管理"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [],
+      "runtime": {
+        "id": "broadcast",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/broadcast-3.0.1-a8cfaf8a079e-windows-x64.zip",
+        "bytes": 8107795,
+        "sha256": "a8cfaf8a079edf5ecdd9201ab0fe48d7eb9fc30a4cd2fd1b4a53219d0cacf724",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: broadcast\nname: 广播站\nauthor: Dinglin\nversion: 3.0.1\ndescription: 在局域网分享内容\n---\n\n# 广播站\n\n## 功能说明\n\n在局域网分享内容\n\n- 局域网内容发布\n- 访问码与发布前确认\n- 撤回与有效期管理\n\n## 使用方式\n\n在闪念插件管理中安装并启用，通过 @broadcast 调用。\n",
+        "readme_sha256": "cea348d572a292e05b9c813edf10d35650bffbd20729e3dd0b1401b8767bdff1",
+        "readme_metadata": {
+          "id": "broadcast",
+          "name": "广播站",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "在局域网分享内容"
+        }
+      }
+    },
+    {
+      "id": "download",
+      "name": "下载",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "Gopeed下载任务与进度管理",
+      "features": [
+        "链接下载与进度查询",
+        "暂停、继续和取消任务"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [],
+      "runtime": {
+        "id": "download",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/download-3.0.1-3f9d36a57539-windows-x64.zip",
+        "bytes": 8107786,
+        "sha256": "3f9d36a5753987ffda0d3987167b37bced9ec7cfc16fbd81c7816f5f23526fc5",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: download\nname: 下载\nauthor: Dinglin\nversion: 3.0.1\ndescription: Gopeed下载任务与进度管理\n---\n\n# 下载\n\n## 功能说明\n\nGopeed下载任务与进度管理\n\n- 链接下载与进度查询\n- 暂停、继续和取消任务\n\n## 使用方式\n\n在闪念插件管理中安装并启用，通过 @download 调用。\n",
+        "readme_sha256": "bcd7e697107fd3d8ce489ae19465144bd1e9280e4bd2797593e5fb78f109c054",
+        "readme_metadata": {
+          "id": "download",
+          "name": "下载",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "Gopeed下载任务与进度管理"
+        }
+      }
+    },
+    {
+      "id": "voice",
+      "name": "语音输入",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "可选离线语音输入",
+      "features": [
+        "按住说话、松开结束",
+        "本地识别并按光标位置插入文本"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [
+        "voice-models"
+      ],
+      "runtime": {
+        "id": "voice",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/voice-3.0.1-1f5b95a18b8b-windows-x64.zip",
+        "bytes": 8110321,
+        "sha256": "1f5b95a18b8b858d7e2fc05664c9a4939a60c17e4daa467c8827ccae46d12295",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: voice\nname: 语音输入\nauthor: Dinglin\nversion: 3.0.1\ndescription: 可选离线语音输入\n---\n\n# 语音输入\n\n## 功能说明\n\n可选离线语音输入\n\n- 按住说话、松开结束\n- 本地识别并按光标位置插入文本\n\n## 使用方式\n\n在插件管理中添加并启用语音输入，再使用 `/voice install` 安装离线识别组件。在主搜索框内长按鼠标左键约650毫秒开始，松开或按 Esc 结束；识别文字不会自动发送。\n\n## 依赖与限制\n\n需要离线语音组件和麦克风授权。识别在本机 CPU 运行，不上传音频；安装插件不会自动启动麦克风。\n",
+        "readme_sha256": "07481ec83005ad80408d4d3037214075bf41c40d4e4999c8e87fa8a4505308b7",
+        "readme_metadata": {
+          "id": "voice",
+          "name": "语音输入",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "可选离线语音输入"
+        },
+        "voice_ui_sha256": "63ef93f9bf4a124d7f4e8e75bdd1ec2709b32ce17cecaab178f28e671d7523b0"
+      }
+    },
+    {
+      "id": "gesture",
+      "name": "手势控制",
+      "author": "Dinglin",
+      "version": "3.0.1",
+      "description": "可选摄像头手势控制",
+      "features": [
+        "手势鼠标与快捷操作",
+        "摄像头配置和状态显示",
+        "握拳语音输入"
+      ],
+      "source": "https://gitee.com/wu-dinglin/shannon",
+      "distribution": "gitee",
+      "dependencies": [
+        "gesture-environment"
+      ],
+      "runtime": {
+        "id": "gesture",
+        "protocol": 1,
+        "profile": "release",
+        "version": "3.0.1",
+        "url": "https://gitee.com/wu-dinglin/shannon/releases/download/v3.0.1/gesture-3.0.1-20cf3c87a239-windows-x64.zip",
+        "bytes": 8107932,
+        "sha256": "20cf3c87a239e8a80d3f37af62057d114ca5c245b2472da44d2632028764da9d",
+        "executable_sha256": "1ed7cefa08db75c09820546798edebe67ad6b8f9ce33e3b351960cf1f513f0b7",
+        "readme": "---\nid: gesture\nname: 手势控制\nauthor: Dinglin\nversion: 3.0.1\ndescription: 可选摄像头手势控制\n---\n\n# 手势控制\n\n## 功能说明\n\n可选摄像头手势控制\n\n- 手势鼠标与快捷操作\n- 摄像头配置和状态显示\n- 握拳语音输入\n\n## 使用方式\n\n在插件管理中添加并启用手势控制，运行 `/gesture install` 安装组件，然后使用 `/gesture start` 手动启动。`/gesture status` 查询状态，`/gesture stop` 关闭摄像头。\n\n## 依赖与限制\n\n需要手势组件和摄像头授权。握拳语音还需启用语音输入并安装离线语音组件。安装插件不会自动启动设备。\n",
+        "readme_sha256": "8d501b7660561a87ab7f3850080c8759bbbef8d362e1c6fdae0d614ad62ce07b",
+        "readme_metadata": {
+          "id": "gesture",
+          "name": "手势控制",
+          "author": "Dinglin",
+          "version": "3.0.1",
+          "description": "可选摄像头手势控制"
+        }
+      }
+    }
+  ]
+}

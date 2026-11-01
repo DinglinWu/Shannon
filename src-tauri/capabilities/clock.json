@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "clock",
+  "description": "Allow the timer to resize its own hover controls",
+  "windows": ["clock"],
+  "permissions": ["core:default", "core:window:allow-set-size"]
+}

@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {chatBubbles} from '../src/wechat-bubbles.js';
+test('complete replies use at most three semantic bubbles without deleting brackets or code',()=>{assert.deepEqual(chatBubbles('[看了看窗外。] 下雨了。'),['[看了看窗外。] 下雨了。']);assert.deepEqual(chatBubbles('第一条\n\n第二条\n\n第三条\n\n第四条'),['第一条','第二条','第三条\n\n第四条']);const code='看代码：\n\n```python\nprint("hello")\n\nprint("world")\n```';assert.deepEqual(chatBubbles(code),[code]);});

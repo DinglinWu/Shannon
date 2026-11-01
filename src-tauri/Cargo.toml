@@ -1,0 +1,66 @@
+[package]
+name = "shannon"
+version = "3.0.1"
+authors = ["Dinglin"]
+description = "闪念 —— 即用即开的 AI 对话启动器"
+edition = "2021"
+default-run = "shannon"
+
+[[bin]]
+name = "shannon"
+path = "src/main.rs"
+
+[[bin]]
+name = "shannon-plugin-runtime"
+path = "src/main.rs"
+required-features = ["native-runtime"]
+
+[[bin]]
+name = "shannon-preview"
+path = "src/main.rs"
+required-features = ["custom-protocol", "local-preview"]
+
+[[bin]]
+name = "shannon-voice"
+path = "workers/voice.rs"
+required-features = ["voice-worker"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-autostart = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"
+open = "5"
+pinyin = "0.10"
+toml = "0.8"
+tauri-plugin-updater = "2"
+toml_edit = "0.22"
+minisign-verify = "0.2"
+sha2 = "0.10"
+base64 = "0.22"
+png = "0.17"
+getrandom = "0.3"
+chrono = "0.4"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+
+[features]
+default = []
+native-runtime = []
+local-preview = []
+custom-protocol = ["tauri/custom-protocol"]
+voice-worker = ["dep:cpal", "dep:sherpa-onnx"]
+
+[target.'cfg(windows)'.dependencies]
+cpal = { version = "0.16", optional = true }
+sherpa-onnx = { version = "=1.13.8", optional = true }
+
+[patch.crates-io]
+# Use the official Windows MD/no-TTS archive to match Rust's CRT and avoid unused TTS dependencies.
+sherpa-onnx-sys = { path = "vendor/sherpa-onnx-sys" }

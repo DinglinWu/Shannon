@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","identifier":"wechat","description":"AI simulated chat window events only","windows":["wechat"],"permissions":["core:default","core:window:allow-start-dragging"]}

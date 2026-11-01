@@ -1,0 +1,1 @@
+{"$schema":"../gen/schemas/desktop-schema.json","identifier":"story","description":"Story stage window","windows":["story"],"permissions":["core:default"]}

@@ -1,0 +1,73 @@
+/* Floating status pill; the window keeps 340x86 and the card insets from it. */
+body { padding: 6px 8px; }
+#gesture-island {
+  --tone: #ff9b45;
+  --tone-soft: #ff9b4514;
+  --tone-line: #ff9b4533;
+  width: 324px; height: 74px; overflow: hidden;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #1d1a18 0%, #141312 100%);
+  color: var(--clock-accent);
+  border: 1px solid var(--tone-line); border-radius: 20px;
+  box-shadow: 0 8px 28px #00000066, inset 0 1px 0 #ffffff0d;
+  transition: height .24s cubic-bezier(.22,1,.36,1), border-color .3s ease;
+  user-select: none; outline: none;
+}
+#gesture-island.expanded { height: 124px; }
+#gesture-island:focus-visible { box-shadow: inset 0 -2px 0 var(--clock-focus), 0 8px 28px #00000066; }
+#gesture-island[data-tone="active"] { --tone: #ff9b45; --tone-soft: #ff9b4518; --tone-line: #ff9b4545; }
+#gesture-island[data-tone="action"] { --tone: #7ddba5; --tone-soft: #7ddba51a; --tone-line: #7ddba566; }
+#gesture-island[data-tone="waiting"] { --tone: #b98a66; --tone-soft: #b98a6612; --tone-line: #b98a6638; }
+#gesture-island[data-tone="starting"] { --tone: #e6a15c; --tone-soft: #e6a15c14; --tone-line: #e6a15c40; }
+#gesture-island[data-tone="error"] { --tone: var(--clock-error); --tone-soft: #ff9b8d14; --tone-line: #ff9b8d4d; color: var(--clock-error); }
+
+#gesture-line { position: relative; height: 74px; display: flex; align-items: center; gap: 16px; padding: 0 18px; }
+/* The ring and the glyph share one 48px box, so the ring stays concentric at every size. */
+#gesture-symbol { position: relative; width: 48px; height: 48px; flex-shrink: 0; display: grid; place-items: center; }
+#gesture-ring { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transform: rotate(-90deg); color: var(--tone); transition: color .3s ease; }
+#gesture-glyph { position: relative; width: 32px; height: 32px; display: grid; place-items: center; color: var(--tone); transition: color .3s ease; }
+#gesture-glyph::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: var(--tone-soft); box-shadow: inset 0 0 0 1px var(--tone-line);
+  transition: background .3s ease, box-shadow .3s ease;
+}
+#gesture-glyph > svg { position: relative; width: 21px; height: 21px; }
+#gesture-glyph.arrived { animation: arrival .5s cubic-bezier(.22,1,.36,1); }
+#gesture-glyph.arrived::before { animation: arrival-ring .5s ease-out; }
+#gesture-island[data-tone="starting"] #gesture-glyph::before { animation: breathe 1.6s ease-in-out infinite; }
+#gesture-island svg { fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.ring-track { opacity: .12; }
+.ring-progress { stroke-dasharray: 1; stroke-dashoffset: calc(1 - var(--recognition-progress, 0)); transition: stroke-dashoffset .2s linear, opacity .3s ease; opacity: .85; }
+
+#gesture-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+#gesture-title { font-size: 15px; font-weight: 600; letter-spacing: -.01em; line-height: 1.25; color: #fff1e6; }
+#gesture-island[data-tone="action"] #gesture-title { color: #c9f5d9; }
+#gesture-island[data-tone="error"] #gesture-title { color: var(--clock-error); }#gesture-hint { font-size: 11.5px; line-height: 1.4; color: var(--clock-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+#gesture-details {
+  height: 50px; padding: 0 19px; gap: 10px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid #ffffff0a;
+  opacity: 0; transform: translateY(-6px); transition: opacity .16s, transform .24s cubic-bezier(.22,1,.36,1);
+}
+#gesture-island:not(.expanded) #gesture-details { pointer-events: none; }
+.expanded #gesture-details { opacity: 1; transform: translateY(0); }
+#gesture-device { font-size: 11px; color: var(--clock-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+#gesture-stop {
+  flex-shrink: 0; width: 30px; height: 30px; display: grid; place-items: center; padding: 6px;
+  border: 1px solid #ff9b4530; border-radius: 50%; background: #ff9b4512; color: var(--clock-subtle);
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+#gesture-stop:hover:not(:disabled) { background: #ff9b4528; border-color: #ff9b4555; color: var(--clock-accent); }
+#gesture-stop:disabled { opacity: .4; cursor: default; }
+.button-icon, .button-icon svg { display: block; width: 16px; height: 16px; }
+#gesture-island[data-tone="waiting"] #gesture-glyph { opacity: .62; }
+#gesture-island[data-error="true"] #gesture-glyph { color: var(--clock-error); }
+
+@keyframes breathe { 50% { opacity: .45; } }
+@keyframes arrival { 0% { transform: scale(.78); } 65% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes arrival-ring { 0% { box-shadow: 0 0 0 0 var(--tone-line); } 100% { box-shadow: 0 0 0 9px #0000; } }
+@media (prefers-reduced-motion: reduce) {
+  #gesture-island, #gesture-details, .ring-progress { transition: none; }
+  #gesture-glyph::before, #gesture-glyph.arrived, #gesture-glyph.arrived::before { animation: none !important; }
+}

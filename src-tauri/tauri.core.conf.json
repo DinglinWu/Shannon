@@ -1,0 +1,9 @@
+{
+  "build": {
+    "beforeBuildCommand": "node scripts/build/build_frontend.mjs core",
+    "frontendDist": "../dist-core"
+  },
+  "bundle": {
+    "useLocalToolsDir": true
+  }
+}

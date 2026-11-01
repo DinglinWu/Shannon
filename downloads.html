@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>下载 · 闪念</title><link rel="icon" href="/app-icon.png"></head>
+<body><main><header><div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 5v15m-6-6 6 6 6-6M6 22v5h20v-5"/></svg><div><h1>下载</h1><p>交给闪念，继续手边的事。</p></div></div><span class="badge">GOPEED · 试用</span></header>
+<form id="add-form"><label for="url">下载链接</label><div class="input-row"><input id="url" type="url" placeholder="粘贴 HTTP 或 HTTPS 链接" required autocomplete="off"><select id="connections" aria-label="下载连接数"><option value="4">多连接 · 4</option><option value="1">单连接</option></select><button id="prepare" type="submit">添加下载</button></div></form>
+<section id="installer" hidden><h2>安装下载组件</h2><p>Gopeed 1.9.3 · 约 38.5 MiB · Windows x64</p><p>确认后从 GitHub 下载并校验组件。下载引擎按需运行，主安装包不包含它。</p><button id="install">同意安装并下载组件</button> <a href="https://github.com/GopeedLab/gopeed/tree/v1.9.3" target="_blank" rel="noreferrer">项目源码 · GPLv3</a></section>
+<section id="review" hidden aria-labelledby="review-title"><h2 id="review-title">确认下载</h2><p id="review-url"></p><p id="review-folder"></p><p id="review-mode"></p><div class="actions"><button id="approve">确认开始</button><button id="reject" class="secondary">取消</button></div></section>
+<p id="feedback" role="status" hidden></p>
+<nav aria-label="下载筛选"><button class="active" data-filter="all">全部 <span id="count">0</span></button><button data-filter="active">进行中</button><button data-filter="done">已完成</button><button id="refresh" class="refresh" aria-label="刷新任务">↻</button></nav>
+<div id="tasks"></div><p id="empty">还没有下载任务<br><small>粘贴链接，开始第一项下载。</small></p>
+<footer><p id="folder"></p><p>关闭此窗口后继续下载。退出闪念会暂停任务，下次打开下载窗口可继续。</p><details><summary>试用说明</summary><p>目前支持普通 HTTP(S) 文件链接；默认最多4个连接，是否加速取决于服务器。自动测速尚未启用。取消任务保留已下载文件，不自动打开、运行或解压文件。</p></details></footer>
+</main><script type="module" src="/src/downloads.js"></script></body></html>

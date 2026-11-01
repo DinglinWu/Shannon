@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>闪念特效</title>
+  <!-- 全屏特效用的覆盖窗口：透明、置顶、鼠标穿透，放完就销毁。
+       由 Rust 的 play_screen_fx 临时建出来，平时不存在，不占内存 -->
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+    canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <canvas id="fx"></canvas>
+  <script type="module" src="/src/fx-page.js"></script>
+</body>
+</html>

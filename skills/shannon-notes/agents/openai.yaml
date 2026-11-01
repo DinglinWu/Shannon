@@ -1,0 +1,4 @@
+interface:
+  display_name: "闪念便签"
+  short_description: "在闪念桌面纸笺中添加与查看待办，支持划去完成事项和恢复便签"
+  default_prompt: "使用 $shannon-notes 帮我把要做的事记到闪念便签。"

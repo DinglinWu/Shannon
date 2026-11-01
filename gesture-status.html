@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>闪念 · 手势</title>
+  <link rel="stylesheet" href="/src/clock.css" />
+  <link rel="stylesheet" href="/src/gesture-status.css" />
+</head>
+<body>
+  <section id="gesture-island" data-tone="starting" tabindex="0" aria-label="手势状态">
+    <div id="gesture-line">
+      <span id="gesture-symbol">
+        <svg id="gesture-ring" viewBox="0 0 48 48" aria-hidden="true"><circle class="ring-track" cx="24" cy="24" r="21"/><circle class="ring-progress" cx="24" cy="24" r="21" pathLength="1"/></svg>
+        <span id="gesture-glyph" aria-hidden="true"></span>
+      </span>
+      <div id="gesture-copy"><strong id="gesture-title">等待手势</strong><span id="gesture-hint">张掌面向摄像头，保持片刻唤醒</span></div>
+    </div>
+    <div id="gesture-details" inert>
+      <span id="gesture-device"></span><button id="gesture-stop" type="button" title="关闭识别" aria-label="关闭识别"><span class="button-icon" aria-hidden="true"></span></button>
+    </div>
+    <span id="gesture-error" class="sr-only" role="alert" hidden></span>
+    <span id="gesture-announcement" class="sr-only" role="status" aria-live="polite"></span>
+  </section>
+  <script type="module" src="/src/gesture-status.js"></script>
+</body>
+</html>
