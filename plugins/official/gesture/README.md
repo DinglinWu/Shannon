@@ -2,7 +2,7 @@
 id: gesture
 name: 手势控制
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 可选摄像头手势控制
 ---
 

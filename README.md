@@ -8,14 +8,14 @@ Windows 桌面 AI 搜索框，使用 Tauri 2 和 WebView2。支持对话、便�
 
 | 目的 | 命令 | 输出 |
 | --- | --- | --- |
-| 打包主程序安装包 | `python build_app.py` | `release/app/` |
+| 打包 GitHub / Gitee 发行包 | `python build_app.py` | `release/github/`、`release/gitee/` |
 | 打包全部官方插件和示例插件 | `python build_plugins.py` | `release/plugins/` |
 | 仅构建主程序 EXE | `python build_app.py --unsigned --exe-only` | `release/dev/Shannon.exe` |
 | 打包自己的 JS 插件 | `python build_plugins.py 插件目录` | `release/plugins/插件ID-版本.zip` |
 
 主程序默认先构建插件，以同步它内置的包哈希和工具目录；已有匹配的插件包时可加 `--reuse-plugins`。Rust 默认使用项目内配置的 HTTPS 镜像，直接运行即可；`--mirror` 保留兼容，依赖已缓存时可加 `--offline`。正式打包默认要求更新签名私钥，缺少密钥就停止。Windows 发布者签名需要单独的受信任证书，可用 `--require-windows-signature` 要求双重签名；首次配置见 [签名说明](docs/release/SIGNING.md)。
 
-签名构建成功后，`release/app/latest.json` 用于自动更新，`release/app/release.json` 提供发行标签、说明和附件路径/大小/SHA-256 清单，便于上传发布。根目录 `latest.json` 同步更新；先上传附件，再推送它。
+签名构建成功后，`release/github/`、`release/gitee/` 分别包含安装包、`.sig`、八个官方插件 ZIP、对应平台的 `latest.json` 和 `release.json` 附件清单。两站使用相同的签名文件，下载地址分别指向各自仓库。程序先检查 Gitee，失败或未发现更新时再检查 GitHub；安装包或官方插件下载失败时会尝试另一站，并继续执行原有签名或哈希校验。先上传两站附件，再推送根目录 `latest.json`（Gitee）和 `latest-github.json`（GitHub）。发布步骤见 [正式发布](docs/release/RELEASE.md)。
 
 也可使用 `npm run build:app`、`npm run build:plugins`。完整选项与构建顺序见 [打包说明](docs/BUILD.md)。`scripts/build/` 是内部实现，不是另一套入口。
 
@@ -39,7 +39,8 @@ Windows 桌面 AI 搜索框，使用 Tauri 2 和 WebView2。支持对话、便�
 | `docs/` | 使用指南、开发规范、发布文档 |
 | `tests/` | 自动测试 |
 | `third_party/` | 第三方许可和署名 |
-| `release/app/` / `release/plugins/` / `release/components/` | 主程序 / 插件 / 可选组件产物 |
+| `release/github/` / `release/gitee/` | 两个平台各自的发行附件和 JSON |
+| `release/app/` / `release/plugins/` / `release/components/` | 主程序构建原件 / 插件 / 可选组件产物 |
 | `dist-core/` / `dist-runtime/` / `node_modules/` | 自动生成的前端产物与依赖 |
 
 使用方法见 [用户指南](docs/USER_GUIDE.md)，其他文档见 [文档索引](docs/INDEX.md)。

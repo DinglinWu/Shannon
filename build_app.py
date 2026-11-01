@@ -71,7 +71,7 @@ def main():
             shutil.copy2(installer,output/installer.name)
             shutil.copy2(signature,output/signature.name)
             write_release_metadata(ROOT,output,version,output/installer.name,output/signature.name)
-            print('已生成 latest.json（自动更新）和 release.json（发行附件清单）。先上传发行附件，再推送根目录 latest.json。')
+            print('已生成 release/github/ 和 release/gitee/，各含安装包、签名、官方插件、latest.json 和 release.json。先上传两站附件，再推送根目录 latest.json、latest-github.json。')
         else:
             shutil.copy2(installer,output/installer.name)
     if args.unsigned:shutil.copy2(ROOT/'src-tauri/target/release/shannon.exe',output/'Shannon.exe')

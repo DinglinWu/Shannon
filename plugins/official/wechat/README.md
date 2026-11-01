@@ -2,7 +2,7 @@
 id: wechat
 name: 微信模拟聊天
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 虚拟人物聊天、朋友圈与后台日常
 ---
 

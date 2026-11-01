@@ -9,12 +9,12 @@ pub fn runtime_spec(id: &str) -> Result<Value, String> {
     crate::builtin_plugins::definition(id)?;
     let spec = metadata()["plugins"].as_array().and_then(|p| p.iter().find(|p| p["id"] == id)).map(|p| p["runtime"].clone()).unwrap_or(Value::Null);
     if spec.is_null() {
-        return Err("官方插件分发包尚未构建，请先生成并上传Gitee发行附件".into());
+        return Err("官方插件分发包尚未构建，请先生成并上传发行附件".into());
     }
     if spec["id"]!=id || spec["protocol"]!=1 {return Err("官方插件身份或协议不匹配".into());}
     if !spec["url"]
         .as_str()
-        .is_some_and(|u| u.starts_with("https://gitee.com/wu-dinglin/shannon/releases/download/"))
+        .is_some_and(crate::release_sources::official_url)
         || spec["sha256"].as_str().is_none_or(|s| s.len() != 64)
         || spec["executable_sha256"]
             .as_str()
@@ -69,19 +69,25 @@ pub async fn ensure_installed(app: &AppHandle, id: &str) -> Result<(), String> {
         return Err("插件包大小无效".into());
     }
     let cfg = crate::load_config(app);
-    let mut builder = reqwest::Client::builder().timeout(std::time::Duration::from_secs(180));
+    let mut builder = reqwest::Client::builder().https_only(true)
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(180));
     if !cfg.ai.use_system_proxy {
         builder = builder.no_proxy();
     }
-    let mut response = builder
-        .build()
-        .map_err(|e| e.to_string())?
-        .get(spec["url"].as_str().unwrap())
-        .send()
-        .await
-        .map_err(|_| "Gitee插件下载失败")?
-        .error_for_status()
-        .map_err(|_| "Gitee插件附件尚未上传或无法访问")?;
+    let client = builder.build().map_err(|e| e.to_string())?;
+    let mut errors = Vec::new();
+    for url in crate::release_sources::download_urls(spec["url"].as_str().unwrap()) {
+        match download_archive(&client, &url, expected, &spec).await {
+            Ok(bytes) => return install_archive(app, id, &bytes, &spec),
+            Err(error) => errors.push(error),
+        }
+    }
+    Err(format!("官方插件所有下载来源均失败：{}", errors.join("；")))
+}
+async fn download_archive(client: &reqwest::Client, url: &str, expected: u64, spec: &Value) -> Result<Vec<u8>, String> {
+    let mut response = client.get(url).send().await.map_err(|e| format!("插件下载失败：{e}"))?
+        .error_for_status().map_err(|e| format!("插件附件不可用：{e}"))?;
     let mut bytes = Vec::new();
     while let Some(chunk) = response.chunk().await.map_err(|_| "插件下载中断")? {
         if bytes.len() + chunk.len() > expected as usize {
@@ -94,7 +100,8 @@ pub async fn ensure_installed(app: &AppHandle, id: &str) -> Result<(), String> {
     {
         return Err("插件包大小或SHA-256校验失败".into());
     }
-    install_archive(app, id, &bytes, &spec)
+    decode_archive(&bytes, spec)?;
+    Ok(bytes)
 }
 fn install_archive(app: &AppHandle, id: &str, bytes: &[u8], spec: &Value) -> Result<(), String> {
     let output = decode_archive(bytes, spec)?;

@@ -1,6 +1,6 @@
 [package]
 name = "shannon"
-version = "3.0.1"
+version = "3.0.2"
 authors = ["Dinglin"]
 description = "闪念 —— 即用即开的 AI 对话启动器"
 edition = "2021"

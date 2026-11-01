@@ -2,7 +2,7 @@
 id: download
 name: 下载
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: Gopeed下载任务与进度管理
 ---
 

@@ -2,7 +2,7 @@
 id: note
 name: 便签
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 桌面便签、待办与日期安排
 ---
 

@@ -37,6 +37,7 @@ mod ai_tools;
 #[cfg(feature="native-runtime")] mod native_service;
 #[cfg(not(feature="native-runtime"))] mod native_bridge;
 mod official_distribution;
+mod release_sources;
 mod plugin_protocol;
 mod plugin_readme;
 mod ai_runtime;

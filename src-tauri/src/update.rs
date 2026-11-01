@@ -1,15 +1,15 @@
 // 自动更新。
 //
-// 版本信息 latest.json 放在 Gitee 公开仓库（地址与公钥写在 tauri.conf.json 的 plugins.updater）。
+// 分别读取 Gitee / GitHub 更新清单，下载同一签名附件时可切换镜像。
 // 后台定期检查，发现新版本时通知前端显示提示；/update install 时下载安装包、用内置公钥验签，
 // 通过后运行安装程序。Windows 上安装程序启动时闪念会退出，安装完成后自动重新启动。
-// 发布步骤见项目根目录 RELEASE.md。
+// 发布步骤见 docs/release/RELEASE.md。
 
 use serde::Serialize;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter};
-use tauri_plugin_updater::{Error, UpdaterExt};
+use tauri_plugin_updater::{Error, Update, UpdaterExt};
 
 #[derive(Serialize, Clone)]
 pub struct UpdateInfo {
@@ -41,9 +41,32 @@ pub fn pending() -> Option<UpdateInfo> {
     PENDING.lock().unwrap().clone()
 }
 
+async fn find_update(app: &AppHandle) -> Result<Option<Update>, String> {
+    let endpoints = app.config().plugins.0.get("updater")
+        .and_then(|v| v["endpoints"].as_array())
+        .ok_or("未配置自动更新来源")?;
+    let mut errors = Vec::new();
+    let mut checked = false;
+    // Separate requests also handle timeouts, malformed JSON and stale mirror manifests.
+    for endpoint in endpoints {
+        let url = endpoint.as_str().ok_or("更新来源格式无效")?
+            .parse().map_err(|_| "更新来源地址无效")?;
+        let updater = app.updater_builder().endpoints(vec![url]).map_err(describe)?
+            .timeout(std::time::Duration::from_secs(15)).build().map_err(describe)?;
+        match updater.check().await {
+            Ok(Some(mut update)) => {
+                update.timeout = Some(std::time::Duration::from_secs(180));
+                return Ok(Some(update));
+            }
+            Ok(None) => checked = true,
+            Err(error) => errors.push(describe(error)),
+        }
+    }
+    if checked { Ok(None) } else { Err(format!("所有更新来源均不可用：{}", errors.join("；"))) }
+}
+
 pub async fn check(app: &AppHandle) -> Result<Option<UpdateInfo>, String> {
-    let updater = app.updater().map_err(describe)?;
-    let found = updater.check().await.map_err(describe)?;
+    let found = find_update(app).await?;
     let info = found.map(|u| UpdateInfo {
         version: u.version.clone(),
         current: u.current_version.clone(),
@@ -65,25 +88,28 @@ pub async fn install(app: &AppHandle) -> Result<(), String> {
 }
 
 async fn run_install(app: &AppHandle) -> Result<(), String> {
-    let updater = app.updater().map_err(describe)?;
-    let Some(update) = updater.check().await.map_err(describe)? else {
+    let Some(mut update) = find_update(app).await? else {
         return Err("当前已是最新版本".into());
     };
-    let mut received: u64 = 0;
-    let progress = app.clone();
-    let done = app.clone();
-    update
-        .download_and_install(
-            move |chunk, total| {
+    let mut errors = Vec::new();
+    for url in crate::release_sources::download_urls(update.download_url.as_str()) {
+        update.download_url = url.parse().map_err(|_| "更新下载地址无效")?;
+        let mut received: u64 = 0;
+        let _ = app.emit("update-progress", (0_u64, Option::<u64>::None));
+        match update.download(
+            |chunk, total| {
                 received += chunk as u64;
-                let _ = progress.emit("update-progress", (received, total));
-            },
-            move || {
-                let _ = done.emit("update-downloaded", ());
-            },
-        )
-        .await
-        .map_err(describe)?;
-    // Windows 上执行不到这里：安装程序启动后进程已退出，安装完成后由安装程序重新启动闪念
-    app.restart()
+                let _ = app.emit("update-progress", (received, total));
+            }, || {},
+        ).await {
+            Ok(bytes) => {
+                // download() has verified the original signature; never retry installer failures.
+                let _ = app.emit("update-downloaded", ());
+                update.install(bytes).map_err(describe)?;
+                app.restart()
+            }
+            Err(error) => errors.push(describe(error)),
+        }
+    }
+    Err(format!("所有下载来源均失败：{}", errors.join("；")))
 }

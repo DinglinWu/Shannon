@@ -10,7 +10,9 @@ python build_app.py --unsigned --exe-only --mirror
 python build_app.py --reuse-plugins --offline --mirror
 ```
 
-默认先调用插件入口，同步 `src-tauri/official-tools.json` 和 `official-plugins.json`，随后构建核心前端、校验插件包、构建安装包。主程序不携带原生插件实现。产物复制到 `release/app/`。签名成功后同时生成 `latest.json`（自动更新目录）与 `release.json`（发行标签、说明及附件路径/大小/SHA-256 清单）。根目录的 `latest.json` 同步更新。`release.json` 是本项目的上传清单，不含认证令牌，不会自动推送远端。
+默认先调用插件入口，同步 `src-tauri/official-tools.json` 和 `official-plugins.json`，随后构建核心前端、校验插件包、构建安装包。主程序不携带原生插件实现。`release/app/` 保留构建原件；签名成功后生成 `release/github/`、`release/gitee/` 两套发行目录，每套都包含同一份安装包、`.sig`、八个官方插件 ZIP、对应下载地址的 `latest.json` 和 `release.json` 附件清单。无需分别编译两次，也无需两套私钥。
+
+根目录 `latest.json` 指向 Gitee 安装包，`latest-github.json` 指向 GitHub 安装包。程序按配置顺序检查两站；超时、连接失败、JSON 无效都会尝试下一站，一站未发现更新也会继续检查另一站。下载失败时切换同一版本和文件名的镜像，签名、版本、插件哈希校验保持有效；安装程序执行失败不会重复启动安装。两站须发布完全相同的附件及标签。`release.json` 是上传清单，不含认证令牌，不会自动推送远端。具体步骤见 [正式发布](release/RELEASE.md)。
 
 `--unsigned --exe-only` 只构建本地测试 EXE，输出 `release/dev/`；`--reuse-plugins` 跳过插件重建，但仍核对目录、ZIP 和 README；`--offline` 禁止 Cargo 下载；项目内 `.cargo/config.toml` 默认使用 HTTPS Rust 镜像，`--mirror` 保留兼容。正式安装包默认要求更新签名私钥，并生成 `.sig` 和 `latest.json`。缺少私钥或签名校验失败时停止，不回退成无签名发布。首次制作安装包仍需联网获取 NSIS/WebView2 打包工具；`--offline` 仅约束 Cargo，工具缓存位于 `src-tauri/target/.tauri/`。
 

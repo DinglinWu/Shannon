@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Shannon",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "identifier": "com.brynn.ailauncher",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -67,7 +67,8 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEFFMEQwOTZBRDVGRDBFRTUKUldUbER2M1ZhZ2tOcmhndW5ZajNwM2p2L0ozVW1ZUmx0bExHaVNIcHhncnNQSEtRRVEwSVFid00K",
       "endpoints": [
-        "https://gitee.com/wu-dinglin/shannon/raw/master/latest.json"
+        "https://gitee.com/wu-dinglin/shannon/raw/master/latest.json",
+        "https://raw.githubusercontent.com/DinglinWu/Shannon/main/latest-github.json"
       ],
       "windows": {
         "installMode": "passive"

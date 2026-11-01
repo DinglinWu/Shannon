@@ -1,0 +1,11 @@
+{
+  "version": "3.0.2",
+  "notes": "# 闪念 3.0.2\n\n更新说明整理日期：2026-11-01\n\n- 自动更新支持 Gitee 与 GitHub 两个来源；检查或下载失败时自动尝试另一站，继续校验安装包签名。\n- 官方插件支持从两站下载同一份 ZIP，继续核对包哈希、插件身份和 README。\n- 一次运行 `python build_app.py`，生成 GitHub、Gitee 两套发行目录和各自的更新 JSON、附件清单。\n- 插件安装包独立发布，包含开发者、版本和功能说明。\n\n两站附件上传并确认可下载后，再推送根目录的两个更新 JSON。\n",
+  "pub_date": "2026-11-01T11:08:00Z",
+  "platforms": {
+    "windows-x86_64": {
+      "signature": "dW50cnVzdGVkIGNvbW1lbnQ6IHNpZ25hdHVyZSBmcm9tIHRhdXJpIHNlY3JldCBrZXkKUlVUbER2M1ZhZ2tOcnJvWGdCRXlPcVdjM1UzOWdhY294NCsrREMwYUVEdThFMXNXanJUSkFJODkwVVJNdjV4ZWVSeFkwaGdhazQwbjA3cE5zUjNuS0xuUk92VHBuN3dydndzPQp0cnVzdGVkIGNvbW1lbnQ6IHRpbWVzdGFtcDoxNzkzNTMxMjc5CWZpbGU6U2hhbm5vbl8zLjAuMl94NjQtc2V0dXAuZXhlCXZlcnNpb246My4wLjIKaEdHUFdMYmhIbXlMYlhuZTliZUdod3IvSEJQUjNoRVFacXB4MWcza1IzSkVPc3luWnFYQ3FjNGVqa29CQUxOK0tad003M3FldmVxUVd1TlloRER5Q0E9PQo=",
+      "url": "https://github.com/DinglinWu/Shannon/releases/download/v3.0.2/Shannon_3.0.2_x64-setup.exe"
+    }
+  }
+}

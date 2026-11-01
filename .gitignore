@@ -7,8 +7,8 @@ src-tauri/target/
 src-tauri/gen/schemas/
 src-tauri/voice-assets/
 
-# 发布时生成的安装包（通过 Gitee 发行版分发，不纳入版本库）
-release/
+# 发布时生成的安装包（两站发行附件，不纳入版本库；保留 docs/release 文档）
+/release/
 
 # 签名私钥与本地环境变量，任何情况下都不得提交
 *.key

@@ -10,10 +10,12 @@ def check():
         assert 'voice-listening' not in code and 'voice-ripples' not in code, f'voice implementation leaked: {p}'
     cargo=(ROOT/'src-tauri/Cargo.toml').read_text(encoding='utf-8');assert 'default = []' in cargo
     catalog=json.loads((ROOT/'src-tauri/official-plugins.json').read_text(encoding='utf-8'))
+    version=json.loads((ROOT/'package.json').read_text(encoding='utf-8'))['version']
     assert len(catalog['plugins'])==8
     for p in catalog['plugins']: assert p['author'] and p['description'] and p['features'] and p['source'].startswith('https://gitee.com/')
     for plugin in catalog['plugins']:
         spec=plugin['runtime'];assert spec['id']==plugin['id'] and spec['protocol']==1
+        assert spec['version']==plugin['version']==version, '插件目录版本与主程序不一致，请重新构建插件'
         archive=ROOT/'release/plugins'/spec['url'].rsplit('/',1)[1]
         raw=archive.read_bytes();assert len(raw)==spec['bytes'] and hashlib.sha256(raw).hexdigest()==spec['sha256']
         with zipfile.ZipFile(archive) as z:
@@ -24,5 +26,5 @@ def check():
             identity=json.loads(z.read('official-plugin.json'));assert identity=={'id':plugin['id'],'version':spec['version'],'protocol':1}
             assert hashlib.sha256(z.read('runtime.exe')).hexdigest()==spec['executable_sha256']
             if plugin['id']=='voice':assert hashlib.sha256(z.read('voice-ui.js')).hexdigest()==spec['voice_ui_sha256']
-    print('PASS: core assets exclude plugin pages and voice code; separate Gitee package and all metadata match catalog.')
+    print('PASS: core assets exclude plugin pages and voice code; separate release packages and all metadata match catalog.')
 if __name__=='__main__':check()

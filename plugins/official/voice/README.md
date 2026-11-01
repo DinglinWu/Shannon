@@ -2,7 +2,7 @@
 id: voice
 name: 语音输入
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 可选离线语音输入
 ---
 

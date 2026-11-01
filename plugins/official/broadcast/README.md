@@ -2,7 +2,7 @@
 id: broadcast
 name: 广播站
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 在局域网分享内容
 ---
 

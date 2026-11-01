@@ -2,7 +2,7 @@
 id: story
 name: 故事舞台
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 场景演绎、人物、记忆与角色微信
 ---
 

@@ -2,7 +2,7 @@
 id: clock
 name: 计时器
 author: Dinglin
-version: 3.0.1
+version: 3.0.2
 description: 正计时与倒计时
 ---
 
